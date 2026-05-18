@@ -987,6 +987,108 @@ class TestSessionConfigForwarding:
             await client.force_stop()
 
 
+class TestMcpOAuthTokenStorage:
+    @pytest.mark.asyncio
+    async def test_create_session_defaults_mcp_oauth_token_storage_to_in_memory(self):
+        client = CopilotClient(SubprocessConfig(cli_path=CLI_PATH))
+        await client.start()
+
+        try:
+            captured = {}
+            original_request = client._client.request
+
+            async def mock_request(method, params):
+                captured[method] = params
+                return await original_request(method, params)
+
+            client._client.request = mock_request
+            await client.create_session(
+                on_permission_request=PermissionHandler.approve_all,
+            )
+            assert captured["session.create"]["mcpOAuthTokenStorage"] == "in-memory"
+        finally:
+            await client.force_stop()
+
+    @pytest.mark.asyncio
+    async def test_create_session_forwards_explicit_mcp_oauth_token_storage(self):
+        client = CopilotClient(SubprocessConfig(cli_path=CLI_PATH))
+        await client.start()
+
+        try:
+            captured = {}
+            original_request = client._client.request
+
+            async def mock_request(method, params):
+                captured[method] = params
+                return await original_request(method, params)
+
+            client._client.request = mock_request
+            await client.create_session(
+                on_permission_request=PermissionHandler.approve_all,
+                mcp_oauth_token_storage="persistent",
+            )
+            assert captured["session.create"]["mcpOAuthTokenStorage"] == "persistent"
+        finally:
+            await client.force_stop()
+
+    @pytest.mark.asyncio
+    async def test_resume_session_defaults_mcp_oauth_token_storage_to_in_memory(self):
+        client = CopilotClient(SubprocessConfig(cli_path=CLI_PATH))
+        await client.start()
+
+        try:
+            session = await client.create_session(
+                on_permission_request=PermissionHandler.approve_all
+            )
+
+            captured = {}
+            original_request = client._client.request
+
+            async def mock_request(method, params):
+                captured[method] = params
+                if method == "session.resume":
+                    return {"sessionId": session.session_id}
+                return await original_request(method, params)
+
+            client._client.request = mock_request
+            await client.resume_session(
+                session.session_id,
+                on_permission_request=PermissionHandler.approve_all,
+            )
+            assert captured["session.resume"]["mcpOAuthTokenStorage"] == "in-memory"
+        finally:
+            await client.force_stop()
+
+    @pytest.mark.asyncio
+    async def test_resume_session_forwards_explicit_mcp_oauth_token_storage(self):
+        client = CopilotClient(SubprocessConfig(cli_path=CLI_PATH))
+        await client.start()
+
+        try:
+            session = await client.create_session(
+                on_permission_request=PermissionHandler.approve_all
+            )
+
+            captured = {}
+            original_request = client._client.request
+
+            async def mock_request(method, params):
+                captured[method] = params
+                if method == "session.resume":
+                    return {"sessionId": session.session_id}
+                return await original_request(method, params)
+
+            client._client.request = mock_request
+            await client.resume_session(
+                session.session_id,
+                on_permission_request=PermissionHandler.approve_all,
+                mcp_oauth_token_storage="persistent",
+            )
+            assert captured["session.resume"]["mcpOAuthTokenStorage"] == "persistent"
+        finally:
+            await client.force_stop()
+
+
 class TestCopilotClientContextManager:
     @pytest.mark.asyncio
     async def test_aenter_calls_start_and_returns_self(self):
