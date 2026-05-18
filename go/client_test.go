@@ -633,9 +633,14 @@ func TestCreateSessionRequest_MCPOAuthTokenStorage(t *testing.T) {
 
 	t.Run("omits mcpOAuthTokenStorage from JSON when empty", func(t *testing.T) {
 		req := createSessionRequest{}
-		data, _ := json.Marshal(req)
+		data, err := json.Marshal(req)
+		if err != nil {
+			t.Fatalf("Failed to marshal: %v", err)
+		}
 		var m map[string]any
-		json.Unmarshal(data, &m)
+		if err := json.Unmarshal(data, &m); err != nil {
+			t.Fatalf("Failed to unmarshal: %v", err)
+		}
 		if _, ok := m["mcpOAuthTokenStorage"]; ok {
 			t.Error("Expected mcpOAuthTokenStorage to be omitted when empty")
 		}
@@ -660,9 +665,14 @@ func TestResumeSessionRequest_MCPOAuthTokenStorage(t *testing.T) {
 
 	t.Run("omits mcpOAuthTokenStorage from JSON when empty", func(t *testing.T) {
 		req := resumeSessionRequest{SessionID: "s1"}
-		data, _ := json.Marshal(req)
+		data, err := json.Marshal(req)
+		if err != nil {
+			t.Fatalf("Failed to marshal: %v", err)
+		}
 		var m map[string]any
-		json.Unmarshal(data, &m)
+		if err := json.Unmarshal(data, &m); err != nil {
+			t.Fatalf("Failed to unmarshal: %v", err)
+		}
 		if _, ok := m["mcpOAuthTokenStorage"]; ok {
 			t.Error("Expected mcpOAuthTokenStorage to be omitted when empty")
 		}
