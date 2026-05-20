@@ -3138,6 +3138,15 @@ pub struct UiCapabilities {
     /// Whether the host supports interactive elicitation dialogs.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub elicitation: Option<bool>,
+    /// Whether the runtime has accepted the session's MCP Apps (SEP-1865)
+    /// opt-in. `Some(true)` when the consumer set
+    /// [`SessionConfig::request_mcp_apps`] / [`ResumeSessionConfig::request_mcp_apps`]
+    /// to `Some(true)` on create/resume **and** the runtime's `MCP_APPS`
+    /// feature flag (or `COPILOT_MCP_APPS=true` env override) is on. Otherwise
+    /// absent or `Some(false)`, indicating the runtime silently dropped the
+    /// opt-in.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mcp_apps: Option<bool>,
 }
 
 /// Options for the [`SessionUi::input`](crate::session::SessionUi::input) convenience method.

@@ -373,6 +373,12 @@ class SessionUiCapabilities(TypedDict, total=False):
 
     elicitation: bool
     """Whether the host supports interactive elicitation dialogs."""
+    mcpApps: bool
+    """Whether the runtime has accepted the session's MCP Apps (SEP-1865) opt-in.
+    ``True`` when the consumer set ``enable_mcp_apps=True`` on create/resume and
+    the runtime's ``MCP_APPS`` feature flag (or ``COPILOT_MCP_APPS=true`` env
+    override) is on. Otherwise absent or ``False``, indicating the runtime
+    silently dropped the opt-in."""
 
 
 class SessionCapabilities(TypedDict, total=False):

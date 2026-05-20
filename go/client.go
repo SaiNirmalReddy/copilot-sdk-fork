@@ -54,6 +54,25 @@ import (
 
 const noResultPermissionV2Error = "permission handlers cannot return 'no-result' when connected to a protocol v2 server"
 
+// warnIfMcpAppsDropped emits a stderr warning when the consumer set
+// EnableMcpApps=true on create/resume but the runtime did not advertise
+// capabilities.ui.mcpApps in the response. The runtime silently drops the
+// opt-in when its MCP_APPS feature flag (or COPILOT_MCP_APPS=true env
+// override) is unset, so without this warning a consumer trying to use MCP
+// Apps would see no error -- just tools that never expose _meta.ui.resourceUri.
+func warnIfMcpAppsDropped(requested bool, capabilities *SessionCapabilities, sessionID string) {
+	if !requested {
+		return
+	}
+	if capabilities != nil && capabilities.UI != nil && capabilities.UI.McpApps {
+		return
+	}
+	fmt.Fprintf(os.Stderr,
+		"[copilot-sdk] Session %s: EnableMcpApps was requested but the runtime did not advertise capabilities.ui.mcpApps. The runtime's MCP_APPS feature flag or COPILOT_MCP_APPS=true environment override is likely unset; the MCP Apps surface is unavailable for this session.\n",
+		sessionID,
+	)
+}
+
 func validateSessionFsConfig(config *SessionFsConfig) error {
 	if config == nil {
 		return nil
@@ -777,6 +796,7 @@ func (c *Client) CreateSession(ctx context.Context, config *SessionConfig) (*Ses
 
 	session.workspacePath = response.WorkspacePath
 	session.setCapabilities(response.Capabilities)
+	warnIfMcpAppsDropped(config.EnableMcpApps, response.Capabilities, sessionID)
 
 	return session, nil
 }
@@ -965,6 +985,7 @@ func (c *Client) ResumeSessionWithOptions(ctx context.Context, sessionID string,
 
 	session.workspacePath = response.WorkspacePath
 	session.setCapabilities(response.Capabilities)
+	warnIfMcpAppsDropped(config.EnableMcpApps, response.Capabilities, sessionID)
 
 	return session, nil
 }

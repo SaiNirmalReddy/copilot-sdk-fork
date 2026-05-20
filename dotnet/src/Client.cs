@@ -653,6 +653,7 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
 
             session.WorkspacePath = response.WorkspacePath;
             session.SetCapabilities(response.Capabilities);
+            WarnIfMcpAppsDropped(config.EnableMcpApps, response.Capabilities, sessionId);
         }
         catch (Exception ex)
         {
@@ -813,6 +814,7 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
 
             session.WorkspacePath = response.WorkspacePath;
             session.SetCapabilities(response.Capabilities);
+            WarnIfMcpAppsDropped(config.EnableMcpApps, response.Capabilities, sessionId);
         }
         catch (Exception ex)
         {
@@ -1756,6 +1758,23 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
     private void RemoveSession(string sessionId)
     {
         _sessions.TryRemove(sessionId, out _);
+    }
+
+    /// <summary>
+    /// Emit a warning log when the consumer set <c>EnableMcpApps=true</c> on create/resume
+    /// but the runtime did not advertise <c>capabilities.ui.mcpApps</c> in the response.
+    /// The runtime silently drops the opt-in when its <c>MCP_APPS</c> feature flag (or
+    /// <c>COPILOT_MCP_APPS=true</c> env override) is unset, so without this warning a
+    /// consumer trying to use MCP Apps would see no error -- just tools that never expose
+    /// <c>_meta.ui.resourceUri</c>.
+    /// </summary>
+    private void WarnIfMcpAppsDropped(bool requested, SessionCapabilities? capabilities, string sessionId)
+    {
+        if (!requested) return;
+        if (capabilities?.Ui?.McpApps == true) return;
+        _logger?.LogWarning(
+            "Session {SessionId}: EnableMcpApps was requested but the runtime did not advertise capabilities.ui.mcpApps. The runtime's MCP_APPS feature flag or COPILOT_MCP_APPS=true environment override is likely unset; the MCP Apps surface is unavailable for this session.",
+            sessionId);
     }
 
     /// <summary>

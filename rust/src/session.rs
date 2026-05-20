@@ -855,6 +855,11 @@ impl Client {
             }));
         }
         *capabilities.write() = create_result.capabilities.unwrap_or_default();
+        warn_if_mcp_apps_dropped(
+            config.request_mcp_apps.unwrap_or(false),
+            &capabilities.read(),
+            &session_id,
+        );
 
         tracing::debug!(
             elapsed_ms = total_start.elapsed().as_millis(),
@@ -1020,6 +1025,11 @@ impl Client {
         }
 
         *capabilities.write() = resume_capabilities.unwrap_or_default();
+        warn_if_mcp_apps_dropped(
+            config.request_mcp_apps.unwrap_or(false),
+            &capabilities.read(),
+            &session_id,
+        );
 
         tracing::debug!(
             elapsed_ms = total_start.elapsed().as_millis(),
@@ -1043,6 +1053,34 @@ impl Client {
 }
 
 type CommandHandlerMap = HashMap<String, Arc<dyn CommandHandler>>;
+
+/// Emit a `tracing::warn!` when the consumer set `request_mcp_apps: Some(true)`
+/// on create/resume but the runtime did not advertise `capabilities.ui.mcp_apps`
+/// in the response. The runtime silently drops the opt-in when its `MCP_APPS`
+/// feature flag (or `COPILOT_MCP_APPS=true` env override) is unset, so without
+/// this warning a consumer trying to use MCP Apps would see no error — just
+/// tools that never expose `_meta.ui.resourceUri`.
+fn warn_if_mcp_apps_dropped(
+    requested: bool,
+    capabilities: &SessionCapabilities,
+    session_id: &SessionId,
+) {
+    if !requested {
+        return;
+    }
+    let advertised = capabilities
+        .ui
+        .as_ref()
+        .and_then(|ui| ui.mcp_apps)
+        .unwrap_or(false);
+    if advertised {
+        return;
+    }
+    tracing::warn!(
+        session_id = %session_id,
+        "request_mcp_apps was set but the runtime did not advertise capabilities.ui.mcpApps; the MCP_APPS feature flag or COPILOT_MCP_APPS=true environment override is likely unset and the MCP Apps surface is unavailable for this session"
+    );
+}
 
 fn build_command_handler_map(commands: Option<&[CommandDefinition]>) -> Arc<CommandHandlerMap> {
     let map = match commands {

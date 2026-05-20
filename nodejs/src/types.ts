@@ -483,6 +483,14 @@ export interface SessionCapabilities {
     ui?: {
         /** Whether the host supports interactive elicitation dialogs. */
         elicitation?: boolean;
+        /**
+         * Whether the runtime has accepted the session's MCP Apps (SEP-1865)
+         * opt-in. `true` when the consumer set `enableMcpApps: true` on
+         * create/resume **and** the runtime's `MCP_APPS` feature flag (or
+         * `COPILOT_MCP_APPS=true` env override) is on. Otherwise absent or
+         * `false`, indicating the runtime silently dropped the opt-in.
+         */
+        mcpApps?: boolean;
     };
 }
 

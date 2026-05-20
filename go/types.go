@@ -804,6 +804,12 @@ type SessionCapabilities struct {
 type UICapabilities struct {
 	// Elicitation indicates whether the host supports interactive elicitation dialogs.
 	Elicitation bool `json:"elicitation,omitempty"`
+	// McpApps indicates whether the runtime has accepted the session's MCP Apps
+	// (SEP-1865) opt-in. True when the consumer set EnableMcpApps=true on
+	// create/resume AND the runtime's MCP_APPS feature flag (or
+	// COPILOT_MCP_APPS=true env override) is on. Otherwise false, indicating
+	// the runtime silently dropped the opt-in.
+	McpApps bool `json:"mcpApps,omitempty"`
 }
 
 // ElicitationResult is the user's response to an elicitation dialog.

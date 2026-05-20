@@ -87,6 +87,26 @@ function toWireProviderConfig(provider: ProviderConfig): Record<string, unknown>
 const MIN_PROTOCOL_VERSION = 2;
 
 /**
+ * Emit a `console.warn` when the consumer set `enableMcpApps: true` on
+ * create/resume but the runtime did not advertise `capabilities.ui.mcpApps`
+ * in the response. The runtime silently drops the opt-in when its `MCP_APPS`
+ * feature flag (or `COPILOT_MCP_APPS=true` env override) is unset, so without
+ * this warning a consumer trying to use MCP Apps would see no error — just
+ * tools that never expose `_meta.ui.resourceUri`.
+ */
+function warnIfMcpAppsDropped(
+    requested: boolean | undefined,
+    capabilities: { ui?: { mcpApps?: boolean } } | undefined,
+    sessionId: string
+): void {
+    if (requested && !capabilities?.ui?.mcpApps) {
+        console.warn(
+            `[copilot-sdk] Session ${sessionId}: enableMcpApps was requested but the runtime did not advertise capabilities.ui.mcpApps. The runtime's MCP_APPS feature flag or COPILOT_MCP_APPS=true environment override is likely unset; the MCP Apps surface is unavailable for this session.`
+        );
+    }
+}
+
+/**
  * Check if value is a Zod schema (has toJSONSchema method)
  */
 function isZodSchema(value: unknown): value is { toJSONSchema(): Record<string, unknown> } {
@@ -849,10 +869,11 @@ export class CopilotClient {
             const { workspacePath, capabilities } = response as {
                 sessionId: string;
                 workspacePath?: string;
-                capabilities?: { ui?: { elicitation?: boolean } };
+                capabilities?: { ui?: { elicitation?: boolean; mcpApps?: boolean } };
             };
             session["_workspacePath"] = workspacePath;
             session.setCapabilities(capabilities);
+            warnIfMcpAppsDropped(config.enableMcpApps, capabilities, sessionId);
         } catch (e) {
             this.sessions.delete(sessionId);
             throw e;
@@ -990,10 +1011,11 @@ export class CopilotClient {
             const { workspacePath, capabilities } = response as {
                 sessionId: string;
                 workspacePath?: string;
-                capabilities?: { ui?: { elicitation?: boolean } };
+                capabilities?: { ui?: { elicitation?: boolean; mcpApps?: boolean } };
             };
             session["_workspacePath"] = workspacePath;
             session.setCapabilities(capabilities);
+            warnIfMcpAppsDropped(config.enableMcpApps, capabilities, sessionId);
         } catch (e) {
             this.sessions.delete(sessionId);
             throw e;

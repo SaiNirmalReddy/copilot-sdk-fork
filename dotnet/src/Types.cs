@@ -1066,6 +1066,16 @@ public class SessionUiCapabilities
     /// Whether the host supports interactive elicitation dialogs.
     /// </summary>
     public bool? Elicitation { get; set; }
+
+    /// <summary>
+    /// Whether the runtime has accepted the session's MCP Apps (SEP-1865) opt-in.
+    /// <c>true</c> when the consumer set <see cref="SessionConfig.EnableMcpApps"/>
+    /// (or <see cref="ResumeSessionConfig.EnableMcpApps"/>) to <c>true</c> on
+    /// create/resume <b>and</b> the runtime's <c>MCP_APPS</c> feature flag (or
+    /// <c>COPILOT_MCP_APPS=true</c> env override) is on. Otherwise absent or
+    /// <c>false</c>, indicating the runtime silently dropped the opt-in.
+    /// </summary>
+    public bool? McpApps { get; set; }
 }
 
 // ============================================================================
