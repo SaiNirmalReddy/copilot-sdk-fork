@@ -396,6 +396,7 @@ async fn session_capabilities_types_are_properly_structured() {
     let capabilities = github_copilot_sdk::SessionCapabilities {
         ui: Some(UiCapabilities {
             elicitation: Some(true),
+            mcp_apps: None,
         }),
     };
 
