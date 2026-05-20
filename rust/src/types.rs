@@ -1078,6 +1078,23 @@ pub struct SessionConfig {
     /// Defaults to `Some(true)` via [`SessionConfig::default`].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub request_elicitation: Option<bool>,
+    /// Enable MCP Apps (SEP-1865) UI passthrough on this session.
+    ///
+    /// When `Some(true)`, the runtime adds the `mcp-apps` capability to the
+    /// session, which causes it to advertise the
+    /// `extensions.io.modelcontextprotocol/ui` extension to MCP servers (so
+    /// they expose `_meta.ui.resourceUri` on tools) and to expose the
+    /// `session.rpc.mcp.apps.{listTools,callTool,readResource,setHostContext,
+    /// getHostContext}` JSON-RPC methods.
+    ///
+    /// SDK consumers MUST set this to `Some(true)` only when they have an
+    /// iframe renderer that can display `ui://` MCP App bundles. Setting it
+    /// without a renderer will cause MCP servers to register UI-enabled tool
+    /// variants the consumer cannot display.
+    ///
+    /// Defaults to `None` (disabled).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub request_mcp_apps: Option<bool>,
     /// Skill directory paths passed through to the GitHub Copilot CLI.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub skill_directories: Option<Vec<PathBuf>>,
@@ -1208,6 +1225,7 @@ impl std::fmt::Debug for SessionConfig {
             .field("request_exit_plan_mode", &self.request_exit_plan_mode)
             .field("request_auto_mode_switch", &self.request_auto_mode_switch)
             .field("request_elicitation", &self.request_elicitation)
+            .field("request_mcp_apps", &self.request_mcp_apps)
             .field("skill_directories", &self.skill_directories)
             .field("instruction_directories", &self.instruction_directories)
             .field("disabled_skills", &self.disabled_skills)
@@ -1271,6 +1289,7 @@ impl Default for SessionConfig {
             request_exit_plan_mode: Some(true),
             request_auto_mode_switch: Some(true),
             request_elicitation: Some(true),
+            request_mcp_apps: None,
             skill_directories: None,
             instruction_directories: None,
             disabled_skills: None,
@@ -1491,6 +1510,13 @@ impl SessionConfig {
         self
     }
 
+    /// Enable MCP Apps (SEP-1865) UI passthrough on this session. Defaults
+    /// to `None` (disabled). See [`SessionConfig::request_mcp_apps`].
+    pub fn with_request_mcp_apps(mut self, enable: bool) -> Self {
+        self.request_mcp_apps = Some(enable);
+        self
+    }
+
     /// Set skill directory paths passed through to the CLI.
     pub fn with_skill_directories<I, P>(mut self, paths: I) -> Self
     where
@@ -1680,6 +1706,10 @@ pub struct ResumeSessionConfig {
     /// Advertise elicitation provider capability on resume.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub request_elicitation: Option<bool>,
+    /// Enable MCP Apps (SEP-1865) UI passthrough on resume. See
+    /// [`SessionConfig::request_mcp_apps`].
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub request_mcp_apps: Option<bool>,
     /// Skill directory paths passed through to the GitHub Copilot CLI on resume.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub skill_directories: Option<Vec<PathBuf>>,
@@ -1790,6 +1820,7 @@ impl std::fmt::Debug for ResumeSessionConfig {
             .field("request_exit_plan_mode", &self.request_exit_plan_mode)
             .field("request_auto_mode_switch", &self.request_auto_mode_switch)
             .field("request_elicitation", &self.request_elicitation)
+            .field("request_mcp_apps", &self.request_mcp_apps)
             .field("skill_directories", &self.skill_directories)
             .field("instruction_directories", &self.instruction_directories)
             .field("disabled_skills", &self.disabled_skills)
@@ -1852,6 +1883,7 @@ impl ResumeSessionConfig {
             request_exit_plan_mode: Some(true),
             request_auto_mode_switch: Some(true),
             request_elicitation: Some(true),
+            request_mcp_apps: None,
             skill_directories: None,
             instruction_directories: None,
             disabled_skills: None,
@@ -2040,6 +2072,13 @@ impl ResumeSessionConfig {
     /// Advertise elicitation provider capability on resume. Defaults to `Some(true)`.
     pub fn with_request_elicitation(mut self, enable: bool) -> Self {
         self.request_elicitation = Some(enable);
+        self
+    }
+
+    /// Enable MCP Apps (SEP-1865) UI passthrough on resume. Defaults to
+    /// `None` (disabled). See [`SessionConfig::request_mcp_apps`].
+    pub fn with_request_mcp_apps(mut self, enable: bool) -> Self {
+        self.request_mcp_apps = Some(enable);
         self
     }
 
@@ -3366,6 +3405,7 @@ mod tests {
         assert_eq!(cfg.request_elicitation, Some(true));
         assert_eq!(cfg.request_exit_plan_mode, Some(true));
         assert_eq!(cfg.request_auto_mode_switch, Some(true));
+        assert_eq!(cfg.request_mcp_apps, None);
     }
 
     #[test]
@@ -3376,6 +3416,7 @@ mod tests {
         assert_eq!(cfg.request_elicitation, Some(true));
         assert_eq!(cfg.request_exit_plan_mode, Some(true));
         assert_eq!(cfg.request_auto_mode_switch, Some(true));
+        assert_eq!(cfg.request_mcp_apps, None);
     }
 
     #[test]

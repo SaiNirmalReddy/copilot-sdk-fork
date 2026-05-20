@@ -1354,6 +1354,7 @@ class CopilotClient:
         on_elicitation_request: ElicitationHandler | None = None,
         on_exit_plan_mode: ExitPlanModeHandler | None = None,
         on_auto_mode_switch: AutoModeSwitchHandler | None = None,
+        enable_mcp_apps: bool = False,
         create_session_fs_handler: CreateSessionFsHandler | None = None,
         github_token: str | None = None,
         remote_session: RemoteSessionMode | None = None,
@@ -1497,6 +1498,7 @@ class CopilotClient:
         payload["requestElicitation"] = bool(on_elicitation_request)
         payload["requestExitPlanMode"] = bool(on_exit_plan_mode)
         payload["requestAutoModeSwitch"] = bool(on_auto_mode_switch)
+        payload["requestMcpApps"] = bool(enable_mcp_apps)
 
         # Serialize commands (name + description only) into payload
         if commands:
@@ -1725,6 +1727,7 @@ class CopilotClient:
         on_elicitation_request: ElicitationHandler | None = None,
         on_exit_plan_mode: ExitPlanModeHandler | None = None,
         on_auto_mode_switch: AutoModeSwitchHandler | None = None,
+        enable_mcp_apps: bool = False,
         create_session_fs_handler: CreateSessionFsHandler | None = None,
         github_token: str | None = None,
         remote_session: RemoteSessionMode | None = None,
@@ -1883,6 +1886,7 @@ class CopilotClient:
         payload["requestElicitation"] = bool(on_elicitation_request)
         payload["requestExitPlanMode"] = bool(on_exit_plan_mode)
         payload["requestAutoModeSwitch"] = bool(on_auto_mode_switch)
+        payload["requestMcpApps"] = bool(enable_mcp_apps)
 
         # Serialize commands (name + description only) into payload
         if commands:

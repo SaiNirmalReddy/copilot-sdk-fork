@@ -688,6 +688,19 @@ type SessionConfig struct {
 	// OnAutoModeSwitch is a handler for auto-mode-switch requests from the server.
 	// When provided, enables autoModeSwitch.request callbacks for the session.
 	OnAutoModeSwitch AutoModeSwitchHandler
+	// EnableMcpApps enables MCP Apps (SEP-1865) UI passthrough on this session.
+	//
+	// When true, the runtime adds the mcp-apps capability to the session, which
+	// causes it to advertise the extensions.io.modelcontextprotocol/ui extension
+	// to MCP servers (so they expose _meta.ui.resourceUri on tools) and to expose
+	// the session.rpc.mcp.apps.{listTools,callTool,readResource,setHostContext,
+	// getHostContext} JSON-RPC methods.
+	//
+	// SDK consumers MUST set this to true only when they have an iframe renderer
+	// that can display ui:// MCP App bundles. Setting it without a renderer will
+	// cause MCP servers to register UI-enabled tool variants the consumer cannot
+	// display.
+	EnableMcpApps bool
 	// GitHubToken is an optional per-session GitHub token used for authentication.
 	// When provided, the session authenticates as the token's owner instead of
 	// using the global client-level auth.
@@ -947,6 +960,9 @@ type ResumeSessionConfig struct {
 	// OnAutoModeSwitch is a handler for auto-mode-switch requests from the server.
 	// See SessionConfig.OnAutoModeSwitch.
 	OnAutoModeSwitch AutoModeSwitchHandler
+	// EnableMcpApps enables MCP Apps (SEP-1865) UI passthrough on resume.
+	// See SessionConfig.EnableMcpApps.
+	EnableMcpApps bool
 }
 type ProviderConfig struct {
 	// Type is the provider type: "openai", "azure", or "anthropic". Defaults to "openai".
@@ -1168,6 +1184,7 @@ type createSessionRequest struct {
 	InfiniteSessions               *InfiniteSessionConfig         `json:"infiniteSessions,omitempty"`
 	Commands                       []wireCommand                  `json:"commands,omitempty"`
 	RequestElicitation             *bool                          `json:"requestElicitation,omitempty"`
+	RequestMcpApps                 *bool                          `json:"requestMcpApps,omitempty"`
 	GitHubToken                    string                         `json:"gitHubToken,omitempty"`
 	RemoteSession                  rpc.RemoteSessionMode          `json:"remoteSession,omitempty"`
 	Cloud                          *CloudSessionOptions           `json:"cloud,omitempty"`
@@ -1224,6 +1241,7 @@ type resumeSessionRequest struct {
 	InfiniteSessions               *InfiniteSessionConfig         `json:"infiniteSessions,omitempty"`
 	Commands                       []wireCommand                  `json:"commands,omitempty"`
 	RequestElicitation             *bool                          `json:"requestElicitation,omitempty"`
+	RequestMcpApps                 *bool                          `json:"requestMcpApps,omitempty"`
 	GitHubToken                    string                         `json:"gitHubToken,omitempty"`
 	RemoteSession                  rpc.RemoteSessionMode          `json:"remoteSession,omitempty"`
 	Traceparent                    string                         `json:"traceparent,omitempty"`

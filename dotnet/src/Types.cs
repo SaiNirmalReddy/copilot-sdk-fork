@@ -2058,6 +2058,7 @@ public class SessionConfig
         Agent = other.Agent;
         DisabledSkills = other.DisabledSkills is not null ? [.. other.DisabledSkills] : null;
         EnableConfigDiscovery = other.EnableConfigDiscovery;
+        EnableMcpApps = other.EnableMcpApps;
         ExcludedTools = other.ExcludedTools is not null ? [.. other.ExcludedTools] : null;
         Hooks = other.Hooks;
         InfiniteSessions = other.InfiniteSessions;
@@ -2209,6 +2210,23 @@ public class SessionConfig
     /// When provided, the server will route <c>autoModeSwitch.request</c> callbacks to this handler.
     /// </summary>
     public AutoModeSwitchHandler? OnAutoModeSwitch { get; set; }
+
+    /// <summary>
+    /// Enable MCP Apps (SEP-1865) UI passthrough on this session.
+    /// <para>
+    /// When <c>true</c>, the runtime adds the <c>mcp-apps</c> capability to the session, which
+    /// causes it to advertise the <c>extensions.io.modelcontextprotocol/ui</c> extension to MCP
+    /// servers (so they expose <c>_meta.ui.resourceUri</c> on tools) and to expose the
+    /// <c>session.rpc.mcp.apps.{listTools,callTool,readResource,setHostContext,getHostContext}</c>
+    /// JSON-RPC methods.
+    /// </para>
+    /// <para>
+    /// SDK consumers MUST set this to <c>true</c> only when they have an iframe renderer that can
+    /// display <c>ui://</c> MCP App bundles. Setting it without a renderer will cause MCP servers
+    /// to register UI-enabled tool variants the consumer cannot display.
+    /// </para>
+    /// </summary>
+    public bool EnableMcpApps { get; set; }
 
     /// <summary>
     /// Hook handlers for session lifecycle events.
@@ -2370,6 +2388,7 @@ public class ResumeSessionConfig
         EnableConfigDiscovery = other.EnableConfigDiscovery;
         ContinuePendingWork = other.ContinuePendingWork;
         ExcludedTools = other.ExcludedTools is not null ? [.. other.ExcludedTools] : null;
+        EnableMcpApps = other.EnableMcpApps;
         Hooks = other.Hooks;
         InfiniteSessions = other.InfiniteSessions;
         McpServers = other.McpServers is not null
@@ -2499,6 +2518,12 @@ public class ResumeSessionConfig
     /// When provided, the server will route <c>autoModeSwitch.request</c> callbacks to this handler.
     /// </summary>
     public AutoModeSwitchHandler? OnAutoModeSwitch { get; set; }
+
+    /// <summary>
+    /// Enable MCP Apps (SEP-1865) UI passthrough on the resumed session.
+    /// See <see cref="SessionConfig.EnableMcpApps"/>.
+    /// </summary>
+    public bool EnableMcpApps { get; set; }
 
     /// <summary>
     /// Hook handlers for session lifecycle events.
