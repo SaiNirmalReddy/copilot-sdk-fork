@@ -109,7 +109,9 @@ export function buildMcpAppsCspHeader(csp: McpAppsCspInput | undefined): string 
  * iframe.setAttribute("allow", allow);
  * ```
  */
-export function buildMcpAppsAllowAttribute(permissions: McpAppsPermissionsInput | undefined): string {
+export function buildMcpAppsAllowAttribute(
+    permissions: McpAppsPermissionsInput | undefined
+): string {
     if (!permissions) return "";
     const features: string[] = [];
     if (permissions.camera) features.push("camera");

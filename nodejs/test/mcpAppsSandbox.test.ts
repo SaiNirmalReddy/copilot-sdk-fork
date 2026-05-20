@@ -34,7 +34,9 @@ describe("buildMcpAppsCspHeader", () => {
         const header = buildMcpAppsCspHeader({
             connectDomains: ["https://api.weather.com", "wss://realtime.service.com"],
         });
-        expect(header).toContain("connect-src 'self' https://api.weather.com wss://realtime.service.com");
+        expect(header).toContain(
+            "connect-src 'self' https://api.weather.com wss://realtime.service.com"
+        );
     });
 
     it("appends resourceDomains to script-src, style-src, img-src, font-src, media-src", () => {
