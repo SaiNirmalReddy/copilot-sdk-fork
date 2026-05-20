@@ -1412,11 +1412,18 @@ export interface SessionConfig {
     /**
      * Enable MCP Apps (SEP-1865) UI passthrough on this session.
      *
-     * When `true`, the runtime adds the `mcp-apps` capability to the session,
+     * When `true` **and** the runtime has MCP Apps enabled (via the
+     * `MCP_APPS` feature flag or `COPILOT_MCP_APPS=true` environment
+     * override), the runtime adds the `mcp-apps` capability to the session,
      * which causes it to advertise the `extensions.io.modelcontextprotocol/ui`
-     * extension to MCP servers (so they expose `_meta.ui.resourceUri` on tools)
-     * and to expose the `session.rpc.mcp.apps.{listTools,callTool,readResource,
-     * setHostContext,getHostContext}` JSON-RPC methods.
+     * extension to MCP servers (so they expose `_meta.ui.resourceUri` on
+     * tools) and to expose the `session.rpc.mcp.apps.{listTools,callTool,
+     * readResource,setHostContext,getHostContext,diagnose}` JSON-RPC methods.
+     *
+     * If the runtime gate is off, the opt-in is silently dropped server-side
+     * (the runtime logs a warning); the session is created normally but the
+     * MCP Apps surface is unavailable. Inspect the runtime's
+     * `capabilities.ui.mcpApps` on the create/resume response to detect this.
      *
      * SDK consumers MUST set this to `true` only when they have an iframe
      * renderer that can display `ui://` MCP App bundles. Setting it without a
