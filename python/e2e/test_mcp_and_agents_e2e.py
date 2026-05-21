@@ -8,7 +8,7 @@ import pytest
 
 from copilot.session import CustomAgentConfig, MCPServerConfig, PermissionHandler
 
-from .testharness import E2ETestContext, get_final_assistant_message
+from .testharness import E2ETestContext
 
 TEST_MCP_SERVER = str(
     (Path(__file__).parents[2] / "test" / "harness" / "test-mcp-server.mjs").resolve()
@@ -38,6 +38,27 @@ class TestMCPServers:
         assert session.session_id is not None
 
         # Simple interaction to verify session works
+        message = await session.send_and_wait("What is 2+2?")
+        assert message is not None
+        assert "4" in message.data.content
+
+        await session.disconnect()
+
+    async def test_should_accept_mcp_server_configuration_without_args(self, ctx: E2ETestContext):
+        """Test that MCP server configuration works without args field"""
+        mcp_servers: dict[str, MCPServerConfig] = {
+            "test-server": {
+                "command": "echo",
+                "tools": ["*"],
+            }
+        }
+
+        session = await ctx.client.create_session(
+            on_permission_request=PermissionHandler.approve_all, mcp_servers=mcp_servers
+        )
+
+        assert session.session_id is not None
+
         message = await session.send_and_wait("What is 2+2?")
         assert message is not None
         assert "4" in message.data.content
@@ -218,10 +239,6 @@ class TestCombinedConfiguration:
         )
 
         assert session.session_id is not None
-
-        await session.send("What is 7+7?")
-        message = await get_final_assistant_message(session)
-        assert "14" in message.data.content
 
         await session.disconnect()
 

@@ -1173,7 +1173,7 @@ interface MCPServerConfigBase {
 export interface MCPStdioServerConfig extends MCPServerConfigBase {
     type?: "local" | "stdio";
     command: string;
-    args: string[];
+    args?: string[];
     /**
      * Environment variables to pass to the server.
      */
