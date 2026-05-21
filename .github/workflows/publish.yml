@@ -79,73 +79,11 @@ jobs:
           fi
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
-  publish-nodejs:
-    name: Publish Node.js SDK
-    needs: version
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./nodejs
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "22.x"
-      - name: Update npm for OIDC support
-        run: npm i -g "npm@11.6.3"
-      - run: npm ci --ignore-scripts
-      - name: Set version
-        run: node scripts/set-version.js
-        env:
-          VERSION: ${{ needs.version.outputs.version }}
-      - name: Build
-        run: npm run build
-      - name: Pack
-        run: npm pack
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7.0.0
-        with:
-          name: nodejs-package
-          path: nodejs/*.tgz
-      - name: Publish to npm
-        if: github.ref == 'refs/heads/main' || github.event.inputs.dist-tag == 'unstable'
-        run: npm publish --tag ${{ github.event.inputs.dist-tag }} --access public --registry https://registry.npmjs.org
-
-  publish-dotnet:
-    name: Publish .NET SDK
-    if: github.event.inputs.dist-tag != 'unstable'
-    needs: version
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./dotnet
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "10.0.x"
-      - name: Restore dependencies
-        run: dotnet restore
-      - name: Build and pack
-        run: dotnet pack src/GitHub.Copilot.SDK.csproj -c Release -p:Version=${{ needs.version.outputs.version }} -o ./artifacts
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7.0.0
-        with:
-          name: dotnet-package
-          path: dotnet/artifacts/*.nupkg
-      - name: NuGet login (OIDC)
-        if: github.ref == 'refs/heads/main'
-        uses: NuGet/login@v1
-        id: nuget-login
-        with:
-          # The following must be a username, not an organization name, and that user must have configured Trusted Publishing
-          # for this owner/repo/workflow combination in their NuGet.org account settings. We could set up a dedicated user for
-          # this purpose if needed, but then we'd have to manage that account separately. Other GitHub-owned packages on NuGet
-          # are associated with individual maintainers' accounts too.
-          user: stevesanderson
-      - name: Publish to NuGet
-        if: github.ref == 'refs/heads/main'
-        run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+  # NOTE: This branch is a hotfix-republish of v0.2.2 as 0.2.3 to PyPI only.
+  # The publish-nodejs, publish-dotnet, and github-release jobs have been
+  # intentionally removed on this branch to prevent any accidental publishing
+  # to npm / NuGet / GitHub Releases / Go tags. Do NOT merge this workflow
+  # change into main.
 
   publish-python:
     name: Publish Python SDK
@@ -178,63 +116,7 @@ jobs:
           name: python-package
           path: python/dist/*
       - name: Publish to PyPI
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/stevesandersonms/tag-0-2-3'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: python/dist/
-
-  github-release:
-    name: Create GitHub Release
-    needs: [version, publish-nodejs, publish-dotnet, publish-python]
-    if: github.ref == 'refs/heads/main' && github.event.inputs.dist-tag != 'unstable'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - name: Create GitHub Release
-        if: github.event.inputs.dist-tag == 'latest'
-        run: |
-          NOTES_FLAG=""
-          if git rev-parse "v${{ needs.version.outputs.current }}" >/dev/null 2>&1; then
-            NOTES_FLAG="--notes-start-tag v${{ needs.version.outputs.current }}"
-          fi
-          gh release create "v${{ needs.version.outputs.version }}" \
-            --title "v${{ needs.version.outputs.version }}" \
-            --generate-notes $NOTES_FLAG \
-            --target ${{ github.sha }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create GitHub Pre-Release
-        if: github.event.inputs.dist-tag == 'prerelease'
-        run: |
-          NOTES_FLAG=""
-          if git rev-parse "v${{ needs.version.outputs.current-prerelease }}" >/dev/null 2>&1; then
-            NOTES_FLAG="--notes-start-tag v${{ needs.version.outputs.current-prerelease }}"
-          fi
-          gh release create "v${{ needs.version.outputs.version }}" \
-            --prerelease \
-            --title "v${{ needs.version.outputs.version }}" \
-            --generate-notes $NOTES_FLAG \
-            --target ${{ github.sha }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Trigger changelog generation
-        run: gh workflow run release-changelog.lock.yml -f tag="v${{ needs.version.outputs.version }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Tag Go SDK submodule
-        if: github.event.inputs.dist-tag == 'latest' || github.event.inputs.dist-tag == 'prerelease'
-        run: |
-          set -e
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch --tags
-          TAG_NAME="go/v${{ needs.version.outputs.version }}"
-          # Try to create the tag - will fail if it already exists
-          if git tag "$TAG_NAME" ${{ github.sha }} 2>/dev/null; then
-            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git "$TAG_NAME"
-            echo "Created and pushed tag $TAG_NAME"
-          else
-            echo "Tag $TAG_NAME already exists, skipping"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
