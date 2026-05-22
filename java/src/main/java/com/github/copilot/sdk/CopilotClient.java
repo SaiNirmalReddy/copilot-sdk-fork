@@ -34,6 +34,7 @@ import com.github.copilot.sdk.json.ModelInfo;
 import com.github.copilot.sdk.json.PingResponse;
 import com.github.copilot.sdk.json.ResumeSessionConfig;
 import com.github.copilot.sdk.json.ResumeSessionResponse;
+import com.github.copilot.sdk.json.SessionCapabilities;
 import com.github.copilot.sdk.json.SessionConfig;
 import com.github.copilot.sdk.json.SessionLifecycleHandler;
 import com.github.copilot.sdk.json.SessionListFilter;
@@ -291,6 +292,31 @@ public final class CopilotClient implements AutoCloseable {
     }
 
     /**
+     * Logs a warning when the consumer set {@code enableMcpApps=true} on
+     * create/resume but the runtime did not advertise
+     * {@code capabilities.ui.mcpApps} in the response. The runtime silently
+     * drops the opt-in when its {@code MCP_APPS} feature flag (or
+     * {@code COPILOT_MCP_APPS=true} env override) is unset, so without this
+     * warning a consumer trying to use MCP Apps would see no error -- just
+     * tools that never expose {@code _meta.ui.resourceUri}.
+     */
+    private static void warnIfMcpAppsDropped(boolean requested, SessionCapabilities capabilities) {
+        if (!requested) {
+            return;
+        }
+        boolean advertised = capabilities != null
+                && capabilities.getUi() != null
+                && capabilities.getUi().getMcpApps().orElse(false);
+        if (advertised) {
+            return;
+        }
+        LOG.warning(
+                "enableMcpApps was requested but the runtime did not advertise capabilities.ui.mcpApps. "
+                        + "The runtime's MCP_APPS feature flag or COPILOT_MCP_APPS=true environment override is "
+                        + "likely unset; the MCP Apps surface is unavailable for this session.");
+    }
+
+    /**
      * Disconnects from the Copilot server and closes all active sessions.
      * <p>
      * This method performs graceful cleanup:
@@ -467,6 +493,7 @@ public final class CopilotClient implements AutoCloseable {
                         rpcNanos);
                 session.setWorkspacePath(response.workspacePath());
                 session.setCapabilities(response.capabilities());
+                warnIfMcpAppsDropped(config.isEnableMcpApps(), response.capabilities());
                 // If the server returned a different sessionId (e.g. a v2 CLI that ignores
                 // the client-supplied ID), re-key the sessions map.
                 String returnedId = response.sessionId();
@@ -552,6 +579,7 @@ public final class CopilotClient implements AutoCloseable {
                         rpcNanos);
                 session.setWorkspacePath(response.workspacePath());
                 session.setCapabilities(response.capabilities());
+                warnIfMcpAppsDropped(config.isEnableMcpApps(), response.capabilities());
                 // If the server returned a different sessionId than what was requested, re-key.
                 String returnedId = response.sessionId();
                 if (returnedId != null && !returnedId.equals(sessionId)) {
