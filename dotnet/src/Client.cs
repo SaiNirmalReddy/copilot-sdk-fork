@@ -528,6 +528,7 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
 
         var hasHooks = config.Hooks != null && (
             config.Hooks.OnPreToolUse != null ||
+            config.Hooks.OnPreMcpToolCall != null ||
             config.Hooks.OnPostToolUse != null ||
             config.Hooks.OnUserPromptSubmitted != null ||
             config.Hooks.OnSessionStart != null ||
@@ -690,6 +691,7 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
 
         var hasHooks = config.Hooks != null && (
             config.Hooks.OnPreToolUse != null ||
+            config.Hooks.OnPreMcpToolCall != null ||
             config.Hooks.OnPostToolUse != null ||
             config.Hooks.OnUserPromptSubmitted != null ||
             config.Hooks.OnSessionStart != null ||
@@ -1235,7 +1237,7 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
         }
 
         await Rpc.SessionFs.SetProviderAsync(
-            _options.SessionFs.InitialCwd,
+            _options.SessionFs.InitialWorkingDirectory,
             _options.SessionFs.SessionStatePath,
             _options.SessionFs.Conventions,
             _options.SessionFs.Capabilities,

@@ -77,8 +77,8 @@ func validateSessionFsConfig(config *SessionFsConfig) error {
 	if config == nil {
 		return nil
 	}
-	if config.InitialCwd == "" {
-		return errors.New("SessionFs.InitialCwd is required")
+	if config.InitialWorkingDirectory == "" {
+		return errors.New("SessionFs.InitialWorkingDirectory is required")
 	}
 	if config.SessionStatePath == "" {
 		return errors.New("SessionFs.SessionStatePath is required")
@@ -114,13 +114,17 @@ type Client struct {
 	client           *jsonrpc2.Client
 	actualPort       int
 	actualHost       string
-	state            ConnectionState
+	state            connectionState
 	sessions         map[string]*Session
 	sessionsMux      sync.Mutex
 	isExternalServer bool
 	conn             net.Conn // stores net.Conn for external TCP connections
 	useStdio         bool     // resolved value from options
-	autoStart        bool     // resolved value from options
+	// resolved process options for the spawned runtime (zero values for UriConnection)
+	cliPath            string
+	cliArgs            []string
+	port               int
+	tcpConnectionToken string
 
 	modelsCache               []ModelInfo
 	modelsCacheMux            sync.Mutex
@@ -147,115 +151,81 @@ type Client struct {
 	internalRPC *rpc.InternalServerRpc
 }
 
-// NewClient creates a new Copilot CLI client with the given options.
+// NewClient creates a new Copilot runtime client with the given options.
 //
-// If options is nil, default options are used (spawns CLI server using stdio).
-// The client is not connected after creation; call [Client.Start] to connect.
+// If options is nil, default options are used (spawns the bundled runtime over
+// stdio). The client is not connected after creation; call [Client.Start] to
+// connect, or simply call [Client.CreateSession]/[Client.ResumeSession], which
+// auto-start the runtime on first use.
 //
 // Example:
 //
-//	// Default options
+//	// Default options: bundled runtime over stdio
 //	client := copilot.NewClient(nil)
 //
-//	// Custom options
+//	// Custom CLI path over stdio
 //	client := copilot.NewClient(&copilot.ClientOptions{
-//	    CLIPath:  "/usr/local/bin/copilot",
-//	    LogLevel: "debug",
+//	    Connection: copilot.StdioConnection{Path: "/usr/local/bin/copilot"},
+//	    LogLevel:   "debug",
+//	})
+//
+//	// Connect to an already-running runtime
+//	client := copilot.NewClient(&copilot.ClientOptions{
+//	    Connection: copilot.UriConnection{URL: "localhost:8080"},
 //	})
 func NewClient(options *ClientOptions) *Client {
-	opts := ClientOptions{
-		CLIPath:  "",
-		Cwd:      "",
-		Port:     0,
-		LogLevel: "info",
-	}
+	opts := ClientOptions{}
 
 	client := &Client{
 		options:          opts,
-		state:            StateDisconnected,
+		state:            stateDisconnected,
 		sessions:         make(map[string]*Session),
 		actualHost:       "localhost",
 		isExternalServer: false,
 		useStdio:         true,
-		autoStart:        true, // default
 	}
 
 	if options != nil {
-		// Validate mutually exclusive options
-		if options.CLIUrl != "" && ((options.UseStdio != nil) || options.CLIPath != "") {
-			panic("CLIUrl is mutually exclusive with UseStdio and CLIPath")
-		}
+		opts = *options
+	}
 
-		// Validate auth options with external server
-		if options.CLIUrl != "" && (options.GitHubToken != "" || options.UseLoggedInUser != nil) {
-			panic("GitHubToken and UseLoggedInUser cannot be used with CLIUrl (external server manages its own auth)")
+	// Resolve the connection. nil defaults to an empty StdioConnection.
+	connection := opts.Connection
+	if connection == nil {
+		connection = StdioConnection{}
+	}
+	switch conn := connection.(type) {
+	case StdioConnection:
+		client.useStdio = true
+		client.cliPath = conn.Path
+		if len(conn.Args) > 0 {
+			client.cliArgs = append([]string{}, conn.Args...)
 		}
+	case TcpConnection:
+		client.useStdio = false
+		client.cliPath = conn.Path
+		if len(conn.Args) > 0 {
+			client.cliArgs = append([]string{}, conn.Args...)
+		}
+		client.port = conn.Port
+		client.tcpConnectionToken = conn.ConnectionToken
+	case UriConnection:
+		if conn.URL == "" {
+			panic("UriConnection requires a non-empty URL")
+		}
+		host, port := parseCliUrl(conn.URL)
+		client.actualHost = host
+		client.actualPort = port
+		client.isExternalServer = true
+		client.useStdio = false
+		client.tcpConnectionToken = conn.ConnectionToken
+	default:
+		panic(fmt.Sprintf("unknown RuntimeConnection type: %T", connection))
+	}
 
-		// Validate token vs stdio
-		if options.TCPConnectionToken != "" && options.UseStdio != nil && *options.UseStdio {
-			panic("TCPConnectionToken cannot be used with UseStdio: true")
-		}
-
-		// Parse CLIUrl if provided
-		if options.CLIUrl != "" {
-			host, port := parseCliUrl(options.CLIUrl)
-			client.actualHost = host
-			client.actualPort = port
-			client.isExternalServer = true
-			client.useStdio = false
-			opts.CLIUrl = options.CLIUrl
-		}
-
-		if options.CLIPath != "" {
-			opts.CLIPath = options.CLIPath
-		}
-		if len(options.CLIArgs) > 0 {
-			opts.CLIArgs = append([]string{}, options.CLIArgs...)
-		}
-		if options.Cwd != "" {
-			opts.Cwd = options.Cwd
-		}
-		if options.Port > 0 {
-			opts.Port = options.Port
-			// If port is specified, switch to TCP mode
-			client.useStdio = false
-		}
-		if options.LogLevel != "" {
-			opts.LogLevel = options.LogLevel
-		}
-		if options.Env != nil {
-			opts.Env = options.Env
-		}
-		if options.UseStdio != nil {
-			client.useStdio = *options.UseStdio
-		}
-		if options.AutoStart != nil {
-			client.autoStart = *options.AutoStart
-		}
-		if options.GitHubToken != "" {
-			opts.GitHubToken = options.GitHubToken
-		}
-		if options.UseLoggedInUser != nil {
-			opts.UseLoggedInUser = options.UseLoggedInUser
-		}
-		if options.OnListModels != nil {
-			client.onListModels = options.OnListModels
-		}
-		if options.SessionFs != nil {
-			if err := validateSessionFsConfig(options.SessionFs); err != nil {
-				panic(err.Error())
-			}
-			sessionFs := *options.SessionFs
-			opts.SessionFs = &sessionFs
-		}
-		if options.Telemetry != nil {
-			opts.Telemetry = options.Telemetry
-		}
-		if options.CopilotHome != "" {
-			opts.CopilotHome = options.CopilotHome
-		}
-		opts.SessionIdleTimeoutSeconds = options.SessionIdleTimeoutSeconds
-		opts.Remote = options.Remote
+	// Validate auth options when connecting to an external runtime.
+	if client.isExternalServer && (opts.GitHubToken != "" || opts.UseLoggedInUser != nil) {
+		panic("GitHubToken and UseLoggedInUser cannot be used with UriConnection (external runtime manages its own auth)")
 	}
 
 	// Default Env to current environment if not set
@@ -264,18 +234,27 @@ func NewClient(options *ClientOptions) *Client {
 	}
 
 	// Check effective environment for CLI path (only if not explicitly set via options)
-	if opts.CLIPath == "" {
+	if client.cliPath == "" {
 		if cliPath := getEnvValue(opts.Env, "COPILOT_CLI_PATH"); cliPath != "" {
-			opts.CLIPath = cliPath
+			client.cliPath = cliPath
 		}
 	}
 
 	// Resolve the effective connection token: explicit value if set; else if the SDK
-	// spawns its own CLI in TCP mode, generate a UUID; otherwise empty.
-	if options != nil && options.TCPConnectionToken != "" {
-		client.effectiveConnectionToken = options.TCPConnectionToken
+	// spawns its own runtime in TCP mode, generate a UUID; otherwise empty.
+	if client.tcpConnectionToken != "" {
+		client.effectiveConnectionToken = client.tcpConnectionToken
 	} else if !client.useStdio && !client.isExternalServer {
 		client.effectiveConnectionToken = uuid.NewString()
+	}
+
+	if opts.OnListModels != nil {
+		client.onListModels = opts.OnListModels
+	}
+	if opts.SessionFs != nil {
+		if err := validateSessionFsConfig(opts.SessionFs); err != nil {
+			panic(err.Error())
+		}
 	}
 
 	client.options = opts
@@ -361,17 +340,17 @@ func (c *Client) Start(ctx context.Context) error {
 	c.startStopMux.Lock()
 	defer c.startStopMux.Unlock()
 
-	if c.state == StateConnected {
+	if c.state == stateConnected {
 		return nil
 	}
 
-	c.state = StateConnecting
+	c.state = stateConnecting
 
 	// Only start CLI server process if not connecting to external server
 	if !c.isExternalServer {
 		if err := c.startCLIServer(ctx); err != nil {
 			c.process = nil
-			c.state = StateError
+			c.state = stateError
 			return err
 		}
 	}
@@ -379,21 +358,21 @@ func (c *Client) Start(ctx context.Context) error {
 	// Connect to the server
 	if err := c.connectToServer(ctx); err != nil {
 		killErr := c.killProcess()
-		c.state = StateError
+		c.state = stateError
 		return errors.Join(err, killErr)
 	}
 
 	// Verify protocol version compatibility
 	if err := c.verifyProtocolVersion(ctx); err != nil {
 		killErr := c.killProcess()
-		c.state = StateError
+		c.state = stateError
 		return errors.Join(err, killErr)
 	}
 
 	// If a session filesystem provider was configured, register it.
 	if c.options.SessionFs != nil {
 		req := &rpc.SessionFsSetProviderRequest{
-			InitialCwd:       c.options.SessionFs.InitialCwd,
+			InitialCwd:       c.options.SessionFs.InitialWorkingDirectory,
 			SessionStatePath: c.options.SessionFs.SessionStatePath,
 			Conventions:      c.options.SessionFs.Conventions,
 		}
@@ -406,12 +385,12 @@ func (c *Client) Start(ctx context.Context) error {
 		_, err := c.RPC.SessionFs.SetProvider(ctx, req)
 		if err != nil {
 			killErr := c.killProcess()
-			c.state = StateError
+			c.state = stateError
 			return errors.Join(err, killErr)
 		}
 	}
 
-	c.state = StateConnected
+	c.state = stateConnected
 	return nil
 }
 
@@ -484,7 +463,7 @@ func (c *Client) Stop() error {
 	c.modelsCache = nil
 	c.modelsCacheMux.Unlock()
 
-	c.state = StateDisconnected
+	c.state = stateDisconnected
 	if !c.isExternalServer {
 		c.actualPort = 0
 	}
@@ -556,7 +535,7 @@ func (c *Client) ForceStop() {
 	c.modelsCache = nil
 	c.modelsCacheMux.Unlock()
 
-	c.state = StateDisconnected
+	c.state = stateDisconnected
 	if !c.isExternalServer {
 		c.actualPort = 0
 	}
@@ -569,17 +548,13 @@ func (c *Client) ensureConnected(ctx context.Context) error {
 	if c.client != nil {
 		return nil
 	}
-	if c.autoStart {
-		return c.Start(ctx)
-	}
-	return fmt.Errorf("client not connected. Call Start() first")
+	return c.Start(ctx)
 }
 
 // CreateSession creates a new conversation session with the Copilot CLI.
 //
 // Sessions maintain conversation state, handle events, and manage tool execution.
-// If the client is not connected and AutoStart is enabled, this will automatically
-// start the connection.
+// If the client is not connected, this will automatically start the runtime.
 //
 // The config parameter is optional. If no OnPermissionRequest handler is provided,
 // permission requests are surfaced as events for the caller to resolve manually.
@@ -683,18 +658,18 @@ func (c *Client) CreateSession(ctx context.Context, config *SessionConfig) (*Ses
 	if config.OnElicitationRequest != nil {
 		req.RequestElicitation = Bool(true)
 	}
-	if config.OnExitPlanMode != nil {
+	if config.OnExitPlanModeRequest != nil {
 		req.RequestExitPlanMode = Bool(true)
 	}
-	if config.OnAutoModeSwitch != nil {
+	if config.OnAutoModeSwitchRequest != nil {
 		req.RequestAutoModeSwitch = Bool(true)
 	}
 	if config.EnableMcpApps {
 		req.RequestMcpApps = Bool(true)
 	}
 
-	if config.Streaming {
-		req.Streaming = Bool(true)
+	if config.Streaming != nil {
+		req.Streaming = config.Streaming
 	}
 	if config.IncludeSubAgentStreamingEvents != nil {
 		req.IncludeSubAgentStreamingEvents = config.IncludeSubAgentStreamingEvents
@@ -705,6 +680,7 @@ func (c *Client) CreateSession(ctx context.Context, config *SessionConfig) (*Ses
 		req.RequestUserInput = Bool(true)
 	}
 	if config.Hooks != nil && (config.Hooks.OnPreToolUse != nil ||
+		config.Hooks.OnPreMcpToolCall != nil ||
 		config.Hooks.OnPostToolUse != nil ||
 		config.Hooks.OnUserPromptSubmitted != nil ||
 		config.Hooks.OnSessionStart != nil ||
@@ -748,11 +724,11 @@ func (c *Client) CreateSession(ctx context.Context, config *SessionConfig) (*Ses
 	if config.OnElicitationRequest != nil {
 		session.registerElicitationHandler(config.OnElicitationRequest)
 	}
-	if config.OnExitPlanMode != nil {
-		session.registerExitPlanModeHandler(config.OnExitPlanMode)
+	if config.OnExitPlanModeRequest != nil {
+		session.registerExitPlanModeHandler(config.OnExitPlanModeRequest)
 	}
-	if config.OnAutoModeSwitch != nil {
-		session.registerAutoModeSwitchHandler(config.OnAutoModeSwitch)
+	if config.OnAutoModeSwitchRequest != nil {
+		session.registerAutoModeSwitchHandler(config.OnAutoModeSwitchRequest)
 	}
 
 	c.sessionsMux.Lock()
@@ -760,13 +736,13 @@ func (c *Client) CreateSession(ctx context.Context, config *SessionConfig) (*Ses
 	c.sessionsMux.Unlock()
 
 	if c.options.SessionFs != nil {
-		if config.CreateSessionFsHandler == nil {
+		if config.CreateSessionFsProvider == nil {
 			c.sessionsMux.Lock()
 			delete(c.sessions, sessionID)
 			c.sessionsMux.Unlock()
-			return nil, fmt.Errorf("CreateSessionFsHandler is required in session config when SessionFs is enabled in client options")
+			return nil, fmt.Errorf("CreateSessionFsProvider is required in session config when SessionFs is enabled in client options")
 		}
-		provider := config.CreateSessionFsHandler(session)
+		provider := config.CreateSessionFsProvider(session)
 		if c.options.SessionFs.Capabilities != nil && c.options.SessionFs.Capabilities.Sqlite {
 			if _, ok := provider.(SessionFsSqliteProvider); !ok {
 				c.sessionsMux.Lock()
@@ -846,8 +822,8 @@ func (c *Client) ResumeSessionWithOptions(ctx context.Context, sessionID string,
 	req.ModelCapabilities = config.ModelCapabilities
 	req.AvailableTools = config.AvailableTools
 	req.ExcludedTools = config.ExcludedTools
-	if config.Streaming {
-		req.Streaming = Bool(true)
+	if config.Streaming != nil {
+		req.Streaming = config.Streaming
 	}
 	if config.IncludeSubAgentStreamingEvents != nil {
 		req.IncludeSubAgentStreamingEvents = config.IncludeSubAgentStreamingEvents
@@ -858,6 +834,7 @@ func (c *Client) ResumeSessionWithOptions(ctx context.Context, sessionID string,
 		req.RequestUserInput = Bool(true)
 	}
 	if config.Hooks != nil && (config.Hooks.OnPreToolUse != nil ||
+		config.Hooks.OnPreMcpToolCall != nil ||
 		config.Hooks.OnPostToolUse != nil ||
 		config.Hooks.OnUserPromptSubmitted != nil ||
 		config.Hooks.OnSessionStart != nil ||
@@ -870,7 +847,7 @@ func (c *Client) ResumeSessionWithOptions(ctx context.Context, sessionID string,
 	if config.EnableConfigDiscovery {
 		req.EnableConfigDiscovery = Bool(true)
 	}
-	if config.DisableResume {
+	if config.SuppressResumeEvent {
 		req.DisableResume = Bool(true)
 	}
 	if config.ContinuePendingWork {
@@ -899,10 +876,10 @@ func (c *Client) ResumeSessionWithOptions(ctx context.Context, sessionID string,
 	if config.OnElicitationRequest != nil {
 		req.RequestElicitation = Bool(true)
 	}
-	if config.OnExitPlanMode != nil {
+	if config.OnExitPlanModeRequest != nil {
 		req.RequestExitPlanMode = Bool(true)
 	}
-	if config.OnAutoModeSwitch != nil {
+	if config.OnAutoModeSwitchRequest != nil {
 		req.RequestAutoModeSwitch = Bool(true)
 	}
 	if config.EnableMcpApps {
@@ -937,11 +914,11 @@ func (c *Client) ResumeSessionWithOptions(ctx context.Context, sessionID string,
 	if config.OnElicitationRequest != nil {
 		session.registerElicitationHandler(config.OnElicitationRequest)
 	}
-	if config.OnExitPlanMode != nil {
-		session.registerExitPlanModeHandler(config.OnExitPlanMode)
+	if config.OnExitPlanModeRequest != nil {
+		session.registerExitPlanModeHandler(config.OnExitPlanModeRequest)
 	}
-	if config.OnAutoModeSwitch != nil {
-		session.registerAutoModeSwitchHandler(config.OnAutoModeSwitch)
+	if config.OnAutoModeSwitchRequest != nil {
+		session.registerAutoModeSwitchHandler(config.OnAutoModeSwitchRequest)
 	}
 
 	c.sessionsMux.Lock()
@@ -949,13 +926,13 @@ func (c *Client) ResumeSessionWithOptions(ctx context.Context, sessionID string,
 	c.sessionsMux.Unlock()
 
 	if c.options.SessionFs != nil {
-		if config.CreateSessionFsHandler == nil {
+		if config.CreateSessionFsProvider == nil {
 			c.sessionsMux.Lock()
 			delete(c.sessions, sessionID)
 			c.sessionsMux.Unlock()
-			return nil, fmt.Errorf("CreateSessionFsHandler is required in session config when SessionFs is enabled in client options")
+			return nil, fmt.Errorf("CreateSessionFsProvider is required in session config when SessionFs is enabled in client options")
 		}
-		provider := config.CreateSessionFsHandler(session)
+		provider := config.CreateSessionFsProvider(session)
 		if c.options.SessionFs.Capabilities != nil && c.options.SessionFs.Capabilities.Sqlite {
 			if _, ok := provider.(SessionFsSqliteProvider); !ok {
 				c.sessionsMux.Lock()
@@ -995,7 +972,7 @@ func (c *Client) ResumeSessionWithOptions(ctx context.Context, sessionID string,
 // Returns a list of SessionMetadata for all available sessions, including their IDs,
 // timestamps, optional summaries, and context information.
 //
-// An optional filter can be provided to filter sessions by cwd, git root, repository, or branch.
+// An optional filter can be provided to filter sessions by working directory, git root, repository, or branch.
 //
 // Example:
 //
@@ -1305,26 +1282,9 @@ func (c *Client) handleLifecycleEvent(event SessionLifecycleEvent) {
 	}
 }
 
-// State returns the current connection state of the client.
-//
-// Possible states: StateDisconnected, StateConnecting, StateConnected, StateError.
-//
-// Example:
-//
-//	if client.State() == copilot.StateConnected {
-//	    session, err := client.CreateSession(context.Background(), &copilot.SessionConfig{
-//	        OnPermissionRequest: copilot.PermissionHandler.ApproveAll,
-//	    })
-//	}
-func (c *Client) State() ConnectionState {
-	c.startStopMux.RLock()
-	defer c.startStopMux.RUnlock()
-	return c.state
-}
-
-// ActualPort returns the TCP port the CLI server is listening on.
+// RuntimePort returns the TCP port the runtime is listening on.
 // Returns 0 if the client is not connected or using stdio transport.
-func (c *Client) ActualPort() int {
+func (c *Client) RuntimePort() int {
 	return c.actualPort
 }
 
@@ -1505,7 +1465,7 @@ const stderrBufferSize = 64 * 1024
 // This spawns the CLI server as a subprocess using the configured transport
 // mode (stdio or TCP).
 func (c *Client) startCLIServer(ctx context.Context) error {
-	cliPath := c.options.CLIPath
+	cliPath := c.cliPath
 	if cliPath == "" {
 		// If no CLI path is provided, attempt to use the embedded CLI if available
 		cliPath = embeddedcli.Path()
@@ -1516,14 +1476,19 @@ func (c *Client) startCLIServer(ctx context.Context) error {
 	}
 
 	// Start with user-provided CLIArgs, then add SDK-managed args
-	args := append([]string{}, c.options.CLIArgs...)
-	args = append(args, "--headless", "--no-auto-update", "--log-level", c.options.LogLevel)
+	args := append([]string{}, c.cliArgs...)
+	args = append(args, "--headless", "--no-auto-update")
+	// Only pass --log-level when explicitly configured; otherwise let the
+	// runtime use its own default.
+	if c.options.LogLevel != "" {
+		args = append(args, "--log-level", c.options.LogLevel)
+	}
 
 	// Choose transport mode
 	if c.useStdio {
 		args = append(args, "--stdio")
-	} else if c.options.Port > 0 {
-		args = append(args, "--port", strconv.Itoa(c.options.Port))
+	} else if c.port > 0 {
+		args = append(args, "--port", strconv.Itoa(c.port))
 	}
 
 	// Add auth-related flags
@@ -1545,7 +1510,7 @@ func (c *Client) startCLIServer(ctx context.Context) error {
 		args = append(args, "--session-idle-timeout", strconv.Itoa(c.options.SessionIdleTimeoutSeconds))
 	}
 
-	if c.options.Remote {
+	if c.options.EnableRemoteSessions {
 		args = append(args, "--remote")
 	}
 
@@ -1563,8 +1528,8 @@ func (c *Client) startCLIServer(ctx context.Context) error {
 	configureProcAttr(c.process)
 
 	// Set working directory if specified
-	if c.options.Cwd != "" {
-		c.process.Dir = c.options.Cwd
+	if c.options.WorkingDirectory != "" {
+		c.process.Dir = c.options.WorkingDirectory
 	}
 
 	c.process.Env = append([]string{}, c.options.Env...)
@@ -1576,8 +1541,8 @@ func (c *Client) startCLIServer(ctx context.Context) error {
 		c.process.Env = setEnvValue(c.process.Env, "COPILOT_CONNECTION_TOKEN", c.effectiveConnectionToken)
 	}
 
-	if c.options.CopilotHome != "" {
-		c.process.Env = setEnvValue(c.process.Env, "COPILOT_HOME", c.options.CopilotHome)
+	if c.options.BaseDirectory != "" {
+		c.process.Env = setEnvValue(c.process.Env, "COPILOT_HOME", c.options.BaseDirectory)
 	}
 
 	if c.options.Telemetry != nil {
@@ -1633,7 +1598,7 @@ func (c *Client) startCLIServer(ctx context.Context) error {
 			go func() {
 				c.startStopMux.Lock()
 				defer c.startStopMux.Unlock()
-				c.state = StateDisconnected
+				c.state = stateDisconnected
 			}()
 		})
 		c.RPC = rpc.NewServerRpc(c.client)
@@ -1786,7 +1751,7 @@ func (c *Client) connectViaTcp(ctx context.Context) error {
 		go func() {
 			c.startStopMux.Lock()
 			defer c.startStopMux.Unlock()
-			c.state = StateDisconnected
+			c.state = stateDisconnected
 		}()
 	})
 	c.RPC = rpc.NewServerRpc(c.client)
