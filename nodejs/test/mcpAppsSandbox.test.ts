@@ -73,8 +73,9 @@ describe("buildMcpAppsCspHeader", () => {
     });
 
     // ------------------------------------------------------------------
-    // Domain-input sanitization (defends against CSP directive injection
-    // from malicious or sloppy MCP servers — see review feedback).
+    // Domain-input sanitization per SEP-1865 §Security Implications:
+    // server-supplied CSP domain entries must be validated before
+    // interpolation to prevent directive injection.
     // ------------------------------------------------------------------
 
     it("drops entries containing CSP metacharacters that would inject a sibling directive", () => {

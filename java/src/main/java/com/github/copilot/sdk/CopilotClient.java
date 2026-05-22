@@ -300,7 +300,7 @@ public final class CopilotClient implements AutoCloseable {
      * a consumer trying to use MCP Apps would see no error -- just tools that never
      * expose {@code _meta.ui.resourceUri}.
      */
-    private static void warnIfMcpAppsDropped(boolean requested, SessionCapabilities capabilities) {
+    private static void warnIfMcpAppsDropped(boolean requested, SessionCapabilities capabilities, String sessionId) {
         if (!requested) {
             return;
         }
@@ -309,7 +309,8 @@ public final class CopilotClient implements AutoCloseable {
         if (advertised) {
             return;
         }
-        LOG.warning("enableMcpApps was requested but the runtime did not advertise capabilities.ui.mcpApps. "
+        LOG.warning("Session " + sessionId
+                + ": enableMcpApps was requested but the runtime did not advertise capabilities.ui.mcpApps. "
                 + "The runtime's MCP_APPS feature flag or COPILOT_MCP_APPS=true environment override is "
                 + "likely unset; the MCP Apps surface is unavailable for this session.");
     }
@@ -491,7 +492,7 @@ public final class CopilotClient implements AutoCloseable {
                         rpcNanos);
                 session.setWorkspacePath(response.workspacePath());
                 session.setCapabilities(response.capabilities());
-                warnIfMcpAppsDropped(config.isEnableMcpApps(), response.capabilities());
+                warnIfMcpAppsDropped(config.isEnableMcpApps(), response.capabilities(), sessionId);
                 // If the server returned a different sessionId (e.g. a v2 CLI that ignores
                 // the client-supplied ID), re-key the sessions map.
                 String returnedId = response.sessionId();
@@ -577,7 +578,7 @@ public final class CopilotClient implements AutoCloseable {
                         rpcNanos);
                 session.setWorkspacePath(response.workspacePath());
                 session.setCapabilities(response.capabilities());
-                warnIfMcpAppsDropped(config.isEnableMcpApps(), response.capabilities());
+                warnIfMcpAppsDropped(config.isEnableMcpApps(), response.capabilities(), sessionId);
                 // If the server returned a different sessionId than what was requested, re-key.
                 String returnedId = response.sessionId();
                 if (returnedId != null && !returnedId.equals(sessionId)) {
