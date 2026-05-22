@@ -3293,9 +3293,9 @@ pub struct UiCapabilities {
     pub elicitation: Option<bool>,
     /// Whether the runtime has accepted the session's MCP Apps (SEP-1865)
     /// opt-in. `Some(true)` when the consumer set
-    /// [`SessionConfig::request_mcp_apps`] / [`ResumeSessionConfig::request_mcp_apps`]
-    /// to `Some(true)` on create/resume **and** the runtime's `MCP_APPS`
-    /// feature flag (or `COPILOT_MCP_APPS=true` env override) is on. Otherwise
+    /// [`SessionConfig::enable_mcp_apps`] / [`ResumeSessionConfig::enable_mcp_apps`]
+    /// to `true` on create/resume **and** the runtime's `MCP_APPS` feature
+    /// flag (or `COPILOT_MCP_APPS=true` env override) is on. Otherwise
     /// absent or `Some(false)`, indicating the runtime silently dropped the
     /// opt-in.
     #[serde(skip_serializing_if = "Option::is_none")]

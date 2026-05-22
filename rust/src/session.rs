@@ -1125,7 +1125,7 @@ impl Client {
 
 type CommandHandlerMap = HashMap<String, Arc<dyn CommandHandler>>;
 
-/// Emit a `tracing::warn!` when the consumer set `request_mcp_apps: Some(true)`
+/// Emit a `tracing::warn!` when the consumer set `enable_mcp_apps: true`
 /// on create/resume but the runtime did not advertise `capabilities.ui.mcp_apps`
 /// in the response. The runtime silently drops the opt-in when its `MCP_APPS`
 /// feature flag (or `COPILOT_MCP_APPS=true` env override) is unset, so without
@@ -1149,7 +1149,7 @@ fn warn_if_mcp_apps_dropped(
     }
     tracing::warn!(
         session_id = %session_id,
-        "request_mcp_apps was set but the runtime did not advertise capabilities.ui.mcpApps; the MCP_APPS feature flag or COPILOT_MCP_APPS=true environment override is likely unset and the MCP Apps surface is unavailable for this session"
+        "enable_mcp_apps was set but the runtime did not advertise capabilities.ui.mcpApps; the MCP_APPS feature flag or COPILOT_MCP_APPS=true environment override is likely unset and the MCP Apps surface is unavailable for this session"
     );
 }
 
