@@ -1548,7 +1548,8 @@ class CopilotClient:
         payload["requestElicitation"] = bool(on_elicitation_request)
         payload["requestExitPlanMode"] = bool(on_exit_plan_mode)
         payload["requestAutoModeSwitch"] = bool(on_auto_mode_switch)
-        payload["requestMcpApps"] = bool(enable_mcp_apps)
+        if enable_mcp_apps:
+            payload["requestMcpApps"] = True
 
         # Serialize commands (name + description only) into payload
         if commands:
@@ -1945,7 +1946,8 @@ class CopilotClient:
         payload["requestElicitation"] = bool(on_elicitation_request)
         payload["requestExitPlanMode"] = bool(on_exit_plan_mode)
         payload["requestAutoModeSwitch"] = bool(on_auto_mode_switch)
-        payload["requestMcpApps"] = bool(enable_mcp_apps)
+        if enable_mcp_apps:
+            payload["requestMcpApps"] = True
 
         # Serialize commands (name + description only) into payload
         if commands:
