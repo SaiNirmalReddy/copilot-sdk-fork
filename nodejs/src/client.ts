@@ -77,20 +77,26 @@ import { defaultJoinSessionPermissionHandler } from "./types.js";
 const MIN_PROTOCOL_VERSION = 2;
 
 /**
- * Emit a `console.warn` when the consumer set `enableMcpApps: true` on
- * create/resume but the runtime did not advertise `capabilities.ui.mcpApps`
- * in the response. The runtime silently drops the opt-in when its `MCP_APPS`
- * feature flag (or `COPILOT_MCP_APPS=true` env override) is unset, so without
- * this warning a consumer trying to use MCP Apps would see no error — just
- * tools that never expose `_meta.ui.resourceUri`.
+ * Emit a Node warning (`process.emitWarning`) when the consumer set
+ * `enableMcpApps: true` on create/resume but the runtime did not advertise
+ * `capabilities.ui.mcpApps` in the response. The runtime silently drops the
+ * opt-in when its `MCP_APPS` feature flag (or `COPILOT_MCP_APPS=true` env
+ * override) is unset, so without this warning a consumer trying to use MCP
+ * Apps would see no error — just tools that never expose
+ * `_meta.ui.resourceUri`.
+ *
+ * Using `process.emitWarning` (rather than `console.warn`) means consumers
+ * can route the warning via `process.on("warning", …)`, suppress it with
+ * `--no-warnings`, or filter by the `name` field below.
  */
 function warnIfMcpAppsDropped(
     requested: boolean | undefined,
     capabilities: { ui?: { mcpApps?: boolean } } | undefined
 ): void {
     if (requested && !capabilities?.ui?.mcpApps) {
-        console.warn(
-            "[copilot-sdk] enableMcpApps was requested but the runtime did not advertise capabilities.ui.mcpApps. The runtime's MCP_APPS feature flag or COPILOT_MCP_APPS=true environment override is likely unset; the MCP Apps surface is unavailable for this session."
+        process.emitWarning(
+            "enableMcpApps was requested but the runtime did not advertise capabilities.ui.mcpApps. The runtime's MCP_APPS feature flag or COPILOT_MCP_APPS=true environment override is likely unset; the MCP Apps surface is unavailable for this session.",
+            "McpAppsCapabilityDroppedWarning"
         );
     }
 }

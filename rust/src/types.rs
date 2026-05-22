@@ -3597,6 +3597,31 @@ mod tests {
     }
 
     #[test]
+    fn session_config_enable_mcp_apps_sets_wire_flag_and_serializes() {
+        let cfg = SessionConfig::default().with_enable_mcp_apps(true);
+        assert!(cfg.enable_mcp_apps);
+
+        let wire = cfg.to_wire(SessionId::from("enable-mcp-apps"));
+        assert!(wire.request_mcp_apps);
+
+        let json = serde_json::to_value(&wire).unwrap();
+        assert_eq!(json["requestMcpApps"], serde_json::Value::Bool(true));
+    }
+
+    #[test]
+    fn resume_session_config_enable_mcp_apps_sets_wire_flag_and_serializes() {
+        let cfg = ResumeSessionConfig::new(SessionId::from("resume-enable-mcp-apps"))
+            .with_enable_mcp_apps(true);
+        assert!(cfg.enable_mcp_apps);
+
+        let wire = cfg.to_wire();
+        assert!(wire.request_mcp_apps);
+
+        let json = serde_json::to_value(&wire).unwrap();
+        assert_eq!(json["requestMcpApps"], serde_json::Value::Bool(true));
+    }
+
+    #[test]
     fn session_config_builder_composes() {
         use std::collections::HashMap;
 
