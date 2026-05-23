@@ -414,6 +414,40 @@ When `streaming=True`:
 
 Note: `assistant.message` and `assistant.reasoning` (final events) are always sent regardless of streaming setting.
 
+## Cloud Sessions
+
+Use `create_cloud_session()` to create a Mission Control–backed cloud session.  The
+runtime owns the session ID for cloud sessions, so omit `session_id` and `provider`
+(the SDK raises `ValueError` if either is set).
+
+```python
+from copilot import CopilotClient, RuntimeConnection
+from copilot.client import CloudSessionOptions, CloudSessionRepository
+
+client = CopilotClient(connection=RuntimeConnection.for_stdio(path="/path/to/cli"))
+await client.start()
+
+session = await client.create_cloud_session(
+    cloud=CloudSessionOptions(
+        repository=CloudSessionRepository(
+            owner="my-org",
+            name="my-repo",
+            branch="main",
+        )
+    ),
+    on_event=lambda event: print(event),
+)
+print(session.remote_url)  # URL of the remote cloud session
+```
+
+`create_cloud_session()` accepts the same keyword arguments as `create_session()`
+(tools, streaming, model, hooks, etc.) with two restrictions:
+- `session_id` must not be set (the runtime assigns the ID).
+- `provider` must not be set (cloud sessions always use the Mission Control provider).
+
+Early `session.event` notifications and inbound RPC requests that arrive before the
+session is fully registered are buffered and replayed once the session is ready.
+
 ## Infinite Sessions
 
 By default, sessions use **infinite sessions** which automatically manage context window limits through background compaction and persist state to a workspace directory.

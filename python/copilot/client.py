@@ -996,6 +996,55 @@ def _extract_transform_callbacks(
     return wire_payload, callbacks
 
 
+_PENDING_SESSION_BUFFER_LIMIT = 128
+"""Upper bound on buffered notifications/requests per pending session id.
+
+Holds traffic that arrives between ``session.create`` being sent and the
+SDK learning the runtime-assigned session id from the response (cloud path).
+Drop-oldest behaviour is acceptable: cloud handshakes are short and 128
+entries is well above realistic init/replay bursts.
+"""
+
+
+class _PendingSessionRoutingGuard:
+    """RAII guard that keeps pending-routing mode active for a cloud session.create.
+
+    While alive, notifications and inbound requests addressed to session ids
+    that are not yet registered are buffered instead of dropped, so events
+    the runtime emits between ``session.create`` and its response are not
+    lost.  Dispose exactly once — either after successful registration (to
+    replay the buffered messages) or on any error path (to reject parked
+    request futures so callers don't hang).
+    """
+
+    __slots__ = ("_client", "_disposed")
+
+    def __init__(self, client: CopilotClient) -> None:
+        self._client = client
+        self._disposed = False
+
+    def dispose(self) -> None:
+        if self._disposed:
+            return
+        self._disposed = True
+        waiters_to_reject: list[asyncio.Future] = []
+        with self._client._sessions_lock:
+            self._client._pending_routing_count -= 1
+            if self._client._pending_routing_count == 0:
+                self._client._pending_session_events.clear()
+                for session_waiters in self._client._pending_session_waiters.values():
+                    waiters_to_reject.extend(session_waiters)
+                self._client._pending_session_waiters.clear()
+        for future in waiters_to_reject:
+            if not future.done():
+                # Distinct phrasing from the overflow-eviction path so debugging
+                # can tell the two cases apart.  Matches Rust SDK (commit e0ff254f)
+                # and TS SDK (commit c167bc3e).
+                future.set_exception(
+                    ValueError("pending session routing ended before session was registered")
+                )
+
+
 class CopilotClient:
     """
     Main client for interacting with the Copilot CLI.
@@ -1181,6 +1230,10 @@ class CopilotClient:
         self._state: _ConnectionState = "disconnected"
         self._sessions: dict[str, CopilotSession] = {}
         self._sessions_lock = threading.Lock()
+        # Pending-routing state for create_cloud_session: guarded by _sessions_lock.
+        self._pending_routing_count: int = 0
+        self._pending_session_events: dict[str, list[SessionEvent]] = {}
+        self._pending_session_waiters: dict[str, list[asyncio.Future[CopilotSession]]] = {}
         self._models_cache: list[ModelInfo] | None = None
         self._models_cache_lock = asyncio.Lock()
         self._lifecycle_handlers: list[SessionLifecycleHandler] = []
@@ -1629,6 +1682,11 @@ class CopilotClient:
             ...     streaming=True,
             ... )
         """
+        if cloud is not None:
+            raise ValueError(
+                "CopilotClient.create_session does not support cloud sessions; "
+                "use create_cloud_session instead."
+            )
         if on_permission_request is not None and not callable(on_permission_request):
             raise ValueError("on_permission_request must be callable when provided.")
         if not self._client:
@@ -1879,6 +1937,402 @@ class CopilotClient:
             session_id=actual_session_id,
         )
         return session
+
+    async def create_cloud_session(
+        self,
+        *,
+        cloud: CloudSessionOptions | None = None,
+        session_id: str | None = None,
+        provider: ProviderConfig | None = None,
+        on_permission_request: _PermissionHandlerFn | None = None,
+        model: str | None = None,
+        client_name: str | None = None,
+        reasoning_effort: ReasoningEffort | None = None,
+        tools: list[Tool] | None = None,
+        system_message: SystemMessageConfig | None = None,
+        available_tools: list[str] | None = None,
+        excluded_tools: list[str] | None = None,
+        on_user_input_request: UserInputHandler | None = None,
+        hooks: SessionHooks | None = None,
+        working_directory: str | None = None,
+        enable_session_telemetry: bool | None = None,
+        model_capabilities: ModelCapabilitiesOverride | None = None,
+        streaming: bool | None = None,
+        include_sub_agent_streaming_events: bool | None = None,
+        mcp_servers: dict[str, MCPServerConfig] | None = None,
+        custom_agents: list[CustomAgentConfig] | None = None,
+        default_agent: DefaultAgentConfig | dict[str, Any] | None = None,
+        agent: str | None = None,
+        config_dir: str | None = None,
+        enable_config_discovery: bool | None = None,
+        skill_directories: list[str] | None = None,
+        instruction_directories: list[str] | None = None,
+        disabled_skills: list[str] | None = None,
+        infinite_sessions: InfiniteSessionConfig | None = None,
+        on_event: Callable[[SessionEvent], None] | None = None,
+        commands: list[CommandDefinition] | None = None,
+        on_elicitation_request: ElicitationHandler | None = None,
+        on_exit_plan_mode_request: ExitPlanModeHandler | None = None,
+        on_auto_mode_switch_request: AutoModeSwitchHandler | None = None,
+        create_session_fs_handler: CreateSessionFsHandler | None = None,
+        github_token: str | None = None,
+        remote_session: RemoteSessionMode | None = None,
+    ) -> CopilotSession:
+        """
+        Create a Mission Control–backed cloud session.
+
+        The runtime owns the session ID for cloud sessions: do **not** set
+        ``session_id`` or ``provider`` on the call (the SDK rejects both with
+        :class:`ValueError`).  The SDK omits ``sessionId`` from the
+        ``session.create`` wire payload and registers the resulting session
+        under the id that the runtime returns.
+
+        Any ``session.event`` notifications or inbound JSON-RPC requests
+        (``userInput.request``, ``exitPlanMode.request``, etc.) that arrive
+        between sending ``session.create`` and receiving its response are
+        buffered (bounded, drop-oldest, up to
+        ``_PENDING_SESSION_BUFFER_LIMIT`` per id) and replayed once the
+        returned session id is registered, so early events are not lost.
+
+        **Known limitation:** inbound ``sessionFs.*`` requests (the generated
+        client-session API handlers) are not pending-buffered. In practice the
+        runtime does not initiate ``sessionFs.*`` calls before the
+        ``session.create`` response, so this is theoretical.
+
+        Args:
+            cloud: Required. Cloud session options (repository, branch, etc.).
+            session_id: Must be ``None``; the runtime assigns the id.
+            provider: Must be ``None``; cloud sessions use the runtime's provider.
+            on_permission_request: Handler for permission requests.
+            model: Model to use.
+            client_name: Client name for identification.
+            reasoning_effort: Reasoning effort level.
+            tools: Custom tools to register.
+            system_message: System message configuration.
+            available_tools: Allowlist of tools.
+            excluded_tools: Tools to disable.
+            on_user_input_request: Handler for user input requests.
+            hooks: Lifecycle hooks.
+            working_directory: Working directory.
+            enable_session_telemetry: Enable/disable session telemetry.
+            model_capabilities: Model capabilities override.
+            streaming: Enable streaming responses.
+            include_sub_agent_streaming_events: Include sub-agent streaming events.
+            mcp_servers: MCP server configurations.
+            custom_agents: Custom agent configurations.
+            default_agent: Default agent configuration.
+            agent: Agent to use.
+            config_dir: Configuration directory override.
+            enable_config_discovery: Auto-discover MCP/skill config from cwd.
+            skill_directories: Directories to search for skills.
+            instruction_directories: Additional instruction file directories.
+            disabled_skills: Skills to disable.
+            infinite_sessions: Infinite session configuration.
+            on_event: Callback for session events.
+            commands: Commands to register.
+            on_elicitation_request: Handler for elicitation requests.
+            on_exit_plan_mode_request: Handler for exit-plan-mode requests.
+            on_auto_mode_switch_request: Handler for auto-mode-switch requests.
+            create_session_fs_handler: Session filesystem handler factory.
+            github_token: Per-session GitHub token.
+            remote_session: Remote session mode.
+
+        Returns:
+            A :class:`CopilotSession` for the cloud session, with its
+            ``session_id`` set to the runtime-assigned id.
+
+        Raises:
+            ValueError: If ``cloud`` is ``None``, ``session_id`` is set, or
+                ``provider`` is set.
+
+        Example:
+            >>> session = await client.create_cloud_session(
+            ...     cloud=CloudSessionOptions(
+            ...         repository=CloudSessionRepository(
+            ...             owner="github", name="copilot-sdk", branch="main"
+            ...         )
+            ...     ),
+            ... )
+            >>> print(session.session_id)  # runtime-assigned id
+        """
+        if cloud is None:
+            raise ValueError(
+                "create_cloud_session requires cloud to be set; "
+                "use CloudSessionOptions to configure the repository."
+            )
+        if session_id is not None:
+            raise ValueError(
+                "create_cloud_session does not accept session_id; the runtime assigns one."
+            )
+        if provider is not None:
+            raise ValueError(
+                "create_cloud_session does not accept provider; "
+                "cloud sessions use the runtime's provider."
+            )
+
+        if not self._client:
+            await self.start()
+
+        tool_defs = []
+        if tools:
+            for tool in tools:
+                definition: dict[str, Any] = {
+                    "name": tool.name,
+                    "description": tool.description,
+                }
+                if tool.parameters:
+                    definition["parameters"] = tool.parameters
+                if tool.overrides_built_in_tool:
+                    definition["overridesBuiltInTool"] = True
+                if tool.skip_permission:
+                    definition["skipPermission"] = True
+                tool_defs.append(definition)
+
+        payload: dict[str, Any] = {}
+        if model:
+            payload["model"] = model
+        if client_name:
+            payload["clientName"] = client_name
+        if reasoning_effort:
+            payload["reasoningEffort"] = reasoning_effort
+        if tool_defs:
+            payload["tools"] = tool_defs
+
+        wire_system_message, transform_callbacks = _extract_transform_callbacks(system_message)
+        if wire_system_message:
+            payload["systemMessage"] = wire_system_message
+
+        if available_tools is not None:
+            payload["availableTools"] = available_tools
+        if excluded_tools is not None:
+            payload["excludedTools"] = excluded_tools
+
+        payload["requestPermission"] = bool(on_permission_request)
+        if on_user_input_request:
+            payload["requestUserInput"] = True
+        payload["requestElicitation"] = bool(on_elicitation_request)
+        payload["requestExitPlanMode"] = bool(on_exit_plan_mode_request)
+        payload["requestAutoModeSwitch"] = bool(on_auto_mode_switch_request)
+
+        if commands:
+            payload["commands"] = [
+                {"name": cmd.name, "description": cmd.description} for cmd in commands
+            ]
+        if hooks and any(hooks.values()):
+            payload["hooks"] = True
+        if github_token is not None:
+            payload["gitHubToken"] = github_token
+        if remote_session is not None:
+            payload["remoteSession"] = remote_session.value
+
+        # sessionId intentionally omitted: the runtime assigns the id for cloud sessions.
+        payload["cloud"] = _cloud_session_options_to_dict(cloud)
+
+        if working_directory:
+            payload["workingDirectory"] = working_directory
+        if streaming is not None:
+            payload["streaming"] = streaming
+        payload["includeSubAgentStreamingEvents"] = (
+            include_sub_agent_streaming_events
+            if include_sub_agent_streaming_events is not None
+            else True
+        )
+        if enable_session_telemetry is not None:
+            payload["enableSessionTelemetry"] = enable_session_telemetry
+        if model_capabilities:
+            payload["modelCapabilities"] = _capabilities_to_dict(model_capabilities)
+        if mcp_servers:
+            payload["mcpServers"] = _mcp_servers_to_wire(mcp_servers)
+        payload["envValueMode"] = "direct"
+        if custom_agents:
+            payload["customAgents"] = [
+                self._convert_custom_agent_to_wire_format(a) for a in custom_agents
+            ]
+        if default_agent:
+            payload["defaultAgent"] = self._convert_default_agent_to_wire_format(default_agent)
+        if agent:
+            payload["agent"] = agent
+        if config_dir:
+            payload["configDir"] = config_dir
+        if enable_config_discovery is not None:
+            payload["enableConfigDiscovery"] = enable_config_discovery
+        if skill_directories:
+            payload["skillDirectories"] = skill_directories
+        if instruction_directories is not None:
+            payload["instructionDirectories"] = instruction_directories
+        if disabled_skills:
+            payload["disabledSkills"] = disabled_skills
+        if infinite_sessions:
+            wire_config: dict[str, Any] = {}
+            if "enabled" in infinite_sessions:
+                wire_config["enabled"] = infinite_sessions["enabled"]
+            if "background_compaction_threshold" in infinite_sessions:
+                wire_config["backgroundCompactionThreshold"] = infinite_sessions[
+                    "background_compaction_threshold"
+                ]
+            if "buffer_exhaustion_threshold" in infinite_sessions:
+                wire_config["bufferExhaustionThreshold"] = infinite_sessions[
+                    "buffer_exhaustion_threshold"
+                ]
+            payload["infiniteSessions"] = wire_config
+
+        if not self._client:
+            raise RuntimeError("Client not connected")
+
+        trace_ctx = get_trace_context()
+        payload.update(trace_ctx)
+
+        total_start = time.perf_counter()
+        guard = self._begin_pending_session_routing()
+
+        try:
+            rpc_start = time.perf_counter()
+            response = await self._client.request("session.create", payload)
+            log_timing(
+                logger,
+                logging.DEBUG,
+                "CopilotClient.create_cloud_session session creation request completed",
+                rpc_start,
+            )
+        except BaseException:
+            guard.dispose()
+            raise
+
+        returned_session_id = response.get("sessionId")
+        if not isinstance(returned_session_id, str) or not returned_session_id:
+            logger.warning(
+                "Cloud session.create response missing sessionId; runtime session may leak"
+            )
+            guard.dispose()
+            raise ValueError(
+                "Cloud session.create response did not include a sessionId; "
+                "cannot register session."
+            )
+
+        session = CopilotSession(returned_session_id, self._client, workspace_path=None)
+        session._register_tools(tools)
+        session._register_commands(commands)
+        session._register_permission_handler(on_permission_request)
+        if on_user_input_request:
+            session._register_user_input_handler(on_user_input_request)
+        if on_elicitation_request:
+            session._register_elicitation_handler(on_elicitation_request)
+        if on_exit_plan_mode_request:
+            session._register_exit_plan_mode_handler(on_exit_plan_mode_request)
+        if on_auto_mode_switch_request:
+            session._register_auto_mode_switch_handler(on_auto_mode_switch_request)
+        if hooks:
+            session._register_hooks(hooks)
+        if transform_callbacks:
+            session._register_transform_callbacks(transform_callbacks)
+        if on_event:
+            session.on(on_event)
+
+        try:
+            if self._session_fs_config:
+                if create_session_fs_handler is None:
+                    raise ValueError(
+                        "create_session_fs_handler is required in session config when "
+                        "session_fs is enabled in client options."
+                    )
+                fs_provider: SessionFsProvider = create_session_fs_handler(session)
+                caps = self._session_fs_config.get("capabilities")
+                if caps and caps.get("sqlite"):
+                    from .session_fs_provider import SessionFsSqliteProvider
+
+                    if not isinstance(fs_provider, SessionFsSqliteProvider):
+                        raise ValueError(
+                            "SessionFs capabilities declare SQLite support but the provider "
+                            "does not implement SessionFsSqliteProvider"
+                        )
+                session._client_session_apis.session_fs = create_session_fs_adapter(fs_provider)
+
+            with self._sessions_lock:
+                self._sessions[returned_session_id] = session
+
+            session._workspace_path = response.get("workspacePath")
+            session._remote_url = response.get("remoteUrl")
+            capabilities = response.get("capabilities")
+            session._set_capabilities(capabilities)
+            self._flush_pending_for_session(returned_session_id, session)
+        except BaseException:
+            with self._sessions_lock:
+                self._sessions.pop(returned_session_id, None)
+            guard.dispose()
+            raise
+
+        guard.dispose()
+        log_timing(
+            logger,
+            logging.DEBUG,
+            "CopilotClient.create_cloud_session complete",
+            total_start,
+            session_id=returned_session_id,
+        )
+        return session
+
+    def _begin_pending_session_routing(self) -> _PendingSessionRoutingGuard:
+        """Enter pending-routing mode; return a guard that exits it on dispose().
+
+        While at least one guard is alive, ``session.event`` notifications and
+        inbound JSON-RPC requests addressed to session ids that are not yet
+        registered are buffered (bounded, drop-oldest) and replayed on
+        registration.  When the last guard is disposed, any still-pending
+        messages are dropped and parked request futures are rejected so callers
+        don't hang.
+        """
+        with self._sessions_lock:
+            self._pending_routing_count += 1
+        return _PendingSessionRoutingGuard(self)
+
+    def _flush_pending_for_session(self, session_id: str, session: CopilotSession) -> None:
+        """Drain buffered events and resolve parked request futures for ``session_id``.
+
+        Called from :meth:`create_cloud_session` after the session has been
+        registered in ``_sessions`` and before the pending-routing guard is
+        released.
+        """
+        events_to_dispatch: list[SessionEvent] = []
+        waiters_to_resolve: list[asyncio.Future[CopilotSession]] = []
+        with self._sessions_lock:
+            events_to_dispatch = self._pending_session_events.pop(session_id, [])
+            waiters_to_resolve = self._pending_session_waiters.pop(session_id, [])
+        for event in events_to_dispatch:
+            session._dispatch_event(event)
+        for future in waiters_to_resolve:
+            if not future.done():
+                future.set_result(session)
+
+    async def _resolve_session(self, session_id: str) -> CopilotSession:
+        """Look up the session for an inbound request.
+
+        If the session is not yet registered but a cloud ``session.create`` is
+        in flight (pending-routing mode is active), park the caller on a
+        :class:`asyncio.Future` until the session is registered or pending mode
+        ends.  Otherwise raise :class:`ValueError` immediately.
+        """
+        future: asyncio.Future[CopilotSession] | None = None
+        evicted: asyncio.Future[CopilotSession] | None = None
+        with self._sessions_lock:
+            session = self._sessions.get(session_id)
+            if session is None and self._pending_routing_count > 0:
+                loop = asyncio.get_running_loop()
+                future = loop.create_future()
+                waiters = self._pending_session_waiters.setdefault(session_id, [])
+                # Cap parked waiters at the same limit as notifications.  When exceeded,
+                # reject the oldest so the runtime gets a JSON-RPC error response
+                # (code -32603) rather than hanging on the request id until timeout.
+                # Matches Rust SDK fix (commit 491b4427) and TS SDK (commit c167bc3e).
+                if len(waiters) >= _PENDING_SESSION_BUFFER_LIMIT:
+                    evicted = waiters.pop(0)
+                waiters.append(future)
+        if evicted is not None and not evicted.done():
+            evicted.set_exception(ValueError("pending session buffer overflow"))
+        if session is not None:
+            return session
+        if future is not None:
+            return await future
+        raise ValueError(f"unknown session {session_id}")
 
     async def resume_session(
         self,
@@ -2969,6 +3423,16 @@ class CopilotClient:
                 event = session_event_from_dict(event_dict)
                 with self._sessions_lock:
                     session = self._sessions.get(session_id)
+                    if session is None and self._pending_routing_count > 0:
+                        buf = self._pending_session_events.setdefault(session_id, [])
+                        if len(buf) >= _PENDING_SESSION_BUFFER_LIMIT:
+                            buf.pop(0)
+                            logger.warning(
+                                "pending session event buffer full for %s; dropping oldest",
+                                session_id,
+                            )
+                        buf.append(event)
+                        return
                 if session:
                     session._dispatch_event(event)
             elif method == "session.lifecycle":
@@ -3087,7 +3551,18 @@ class CopilotClient:
                 event_dict = params["event"]
                 # Convert dict to SessionEvent object
                 event = session_event_from_dict(event_dict)
-                session = self._sessions.get(session_id)
+                with self._sessions_lock:
+                    session = self._sessions.get(session_id)
+                    if session is None and self._pending_routing_count > 0:
+                        buf = self._pending_session_events.setdefault(session_id, [])
+                        if len(buf) >= _PENDING_SESSION_BUFFER_LIMIT:
+                            buf.pop(0)
+                            logger.warning(
+                                "pending session event buffer full for %s; dropping oldest",
+                                session_id,
+                            )
+                        buf.append(event)
+                        return
                 if session:
                     session._dispatch_event(event)
             elif method == "session.lifecycle":
@@ -3153,11 +3628,7 @@ class CopilotClient:
         if not session_id or not question:
             raise ValueError("invalid user input request payload")
 
-        with self._sessions_lock:
-            session = self._sessions.get(session_id)
-        if not session:
-            raise ValueError(f"unknown session {session_id}")
-
+        session = await self._resolve_session(session_id)
         result = await session._handle_user_input_request(params)
         return {"answer": result["answer"], "wasFreeform": result["wasFreeform"]}
 
@@ -3173,11 +3644,7 @@ class CopilotClient:
         if not isinstance(actions, list) or not isinstance(recommended_action, str):
             raise ValueError("invalid exit plan mode request payload")
 
-        with self._sessions_lock:
-            session = self._sessions.get(session_id)
-        if not session:
-            raise ValueError(f"unknown session {session_id}")
-
+        session = await self._resolve_session(session_id)
         return dict(await session._handle_exit_plan_mode_request(params))
 
     async def _handle_auto_mode_switch_request(self, params: dict) -> dict:
@@ -3186,11 +3653,7 @@ class CopilotClient:
         if not session_id:
             raise ValueError("invalid auto mode switch request payload")
 
-        with self._sessions_lock:
-            session = self._sessions.get(session_id)
-        if not session:
-            raise ValueError(f"unknown session {session_id}")
-
+        session = await self._resolve_session(session_id)
         response = await session._handle_auto_mode_switch_request(params)
         return {"response": response}
 
@@ -3214,11 +3677,7 @@ class CopilotClient:
         if not session_id or not hook_type:
             raise ValueError("invalid hooks invoke payload")
 
-        with self._sessions_lock:
-            session = self._sessions.get(session_id)
-        if not session:
-            raise ValueError(f"unknown session {session_id}")
-
+        session = await self._resolve_session(session_id)
         output = await session._handle_hooks_invoke(hook_type, input_data)
         return {"output": output}
 
@@ -3230,9 +3689,5 @@ class CopilotClient:
         if not session_id or not sections:
             raise ValueError("invalid systemMessage.transform payload")
 
-        with self._sessions_lock:
-            session = self._sessions.get(session_id)
-        if not session:
-            raise ValueError(f"unknown session {session_id}")
-
+        session = await self._resolve_session(session_id)
         return await session._handle_system_message_transform(sections)
