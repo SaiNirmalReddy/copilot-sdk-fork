@@ -108,6 +108,15 @@ public sealed partial class CopilotSession : IAsyncDisposable
     public string? WorkspacePath { get; internal set; }
 
     /// <summary>
+    /// Gets the remote URL of this cloud session, if available.
+    /// </summary>
+    /// <value>
+    /// The Mission Control remote URL returned by the runtime when creating a cloud session,
+    /// or <c>null</c> for local sessions.
+    /// </value>
+    public string? RemoteUrl { get; internal set; }
+
+    /// <summary>
     /// Gets the capabilities reported by the host for this session.
     /// </summary>
     /// <value>

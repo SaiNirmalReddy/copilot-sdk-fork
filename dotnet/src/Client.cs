@@ -83,6 +83,16 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
     private readonly object _lifecycleHandlersLock = new();
     private ServerRpc? _serverRpc;
 
+    // Pending-routing state for cloud session.create in-flight windows.
+    // While _pendingRoutingCount > 0, notifications and inbound requests
+    // addressed to not-yet-registered session ids are buffered and replayed
+    // once the runtime-assigned id is registered.
+    private int _pendingRoutingCount;
+    private readonly Dictionary<string, List<SessionEvent>> _pendingSessionEvents = new();
+    private readonly Dictionary<string, List<TaskCompletionSource<CopilotSession>>> _pendingSessionWaiters = new();
+    private readonly object _pendingLock = new();
+    private const int PendingSessionBufferLimit = 128;
+
     private sealed record LifecycleSubscription(Type EventType, Action<SessionLifecycleEvent> Handler);
 
     /// <summary>
@@ -520,6 +530,12 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
     {
         ArgumentNullException.ThrowIfNull(config);
 
+        if (config.Cloud != null)
+        {
+            throw new InvalidOperationException(
+                "CopilotClient.CreateSessionAsync does not support cloud sessions; use CreateCloudSessionAsync instead.");
+        }
+
         var connection = await EnsureConnectedAsync(cancellationToken);
         var totalTimestamp = Stopwatch.GetTimestamp();
 
@@ -649,6 +665,359 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
             totalTimestamp,
             sessionId);
         return session;
+    }
+
+    /// <summary>
+    /// Creates a Mission Control–backed cloud session.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The runtime owns the session ID for cloud sessions: do <b>not</b> set
+    /// <see cref="SessionConfig.SessionId"/> or <see cref="SessionConfigBase.Provider"/> on the
+    /// config (the SDK rejects both). The SDK omits <c>sessionId</c> from the
+    /// <c>session.create</c> wire payload and registers the resulting session under the id
+    /// the runtime returns.
+    /// </para>
+    /// <para>
+    /// Any <c>session.event</c> notifications or inbound JSON-RPC requests that arrive between
+    /// sending <c>session.create</c> and receiving its response are buffered (bounded,
+    /// drop-oldest, limit 128 per id) and replayed once the returned id is registered,
+    /// so early events are not lost.
+    /// </para>
+    /// <para>
+    /// <b>Known limitation:</b> inbound <c>sessionFs.*</c> requests are not pending-buffered.
+    /// In practice the runtime does not initiate <c>sessionFs.*</c> before the
+    /// <c>session.create</c> response, so this is theoretical.
+    /// </para>
+    /// </remarks>
+    /// <param name="config">Configuration for the cloud session. <see cref="SessionConfig.Cloud"/> is required.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> that can be used to cancel the operation.</param>
+    /// <returns>A task that resolves to the created <see cref="CopilotSession"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when <see cref="SessionConfig.Cloud"/> is null, or when
+    /// <see cref="SessionConfig.SessionId"/> or <see cref="SessionConfigBase.Provider"/> is set on the config.</exception>
+    /// <example>
+    /// <code>
+    /// var session = await client.CreateCloudSessionAsync(new SessionConfig
+    /// {
+    ///     OnPermissionRequest = PermissionHandler.ApproveAll,
+    ///     Cloud = new CloudSessionOptions
+    ///     {
+    ///         Repository = new CloudSessionRepository { Owner = "github", Name = "copilot-sdk", Branch = "main" }
+    ///     }
+    /// });
+    /// Console.WriteLine($"Cloud session id: {session.SessionId}");
+    /// </code>
+    /// </example>
+    public async Task<CopilotSession> CreateCloudSessionAsync(SessionConfig config, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(config);
+
+        if (config.Cloud == null)
+        {
+            throw new InvalidOperationException(
+                "CopilotClient.CreateCloudSessionAsync requires config.Cloud to be set.");
+        }
+        if (!string.IsNullOrEmpty(config.SessionId))
+        {
+            throw new InvalidOperationException(
+                "CopilotClient.CreateCloudSessionAsync does not support a caller-provided SessionId; the runtime assigns one.");
+        }
+        if (config.Provider != null)
+        {
+            throw new InvalidOperationException(
+                "CopilotClient.CreateCloudSessionAsync does not support config.Provider; cloud sessions use the runtime's provider.");
+        }
+
+        var connection = await EnsureConnectedAsync(cancellationToken);
+        var totalTimestamp = Stopwatch.GetTimestamp();
+
+        var hasHooks = config.Hooks != null && (
+            config.Hooks.OnPreToolUse != null ||
+            config.Hooks.OnPreMcpToolCall != null ||
+            config.Hooks.OnPostToolUse != null ||
+            config.Hooks.OnUserPromptSubmitted != null ||
+            config.Hooks.OnSessionStart != null ||
+            config.Hooks.OnSessionEnd != null ||
+            config.Hooks.OnErrorOccurred != null);
+
+        var (wireSystemMessage, transformCallbacks) = ExtractTransformCallbacks(config.SystemMessage);
+
+        // Begin pending-routing mode so notifications/requests that arrive
+        // before the runtime returns the session id are buffered.
+        var guard = BeginPendingSessionRouting();
+
+        CreateSessionResponse response;
+        try
+        {
+            var (traceparent, tracestate) = TelemetryHelpers.GetTraceContext();
+
+            // sessionId is intentionally omitted (null) on the cloud path:
+            // the runtime assigns the Mission Control session id.
+            var request = new CreateSessionRequest(
+                config.Model,
+                null /* sessionId omitted */,
+                config.ClientName,
+                config.ReasoningEffort,
+                config.Tools?.Select(ToolDefinition.FromAIFunction).ToList(),
+                wireSystemMessage,
+                config.AvailableTools,
+                config.ExcludedTools,
+                null /* Provider not allowed on cloud path */,
+                config.EnableSessionTelemetry,
+                config.OnPermissionRequest != null ? true : null,
+                config.OnUserInputRequest != null ? true : null,
+                config.OnExitPlanModeRequest != null ? true : null,
+                config.OnAutoModeSwitchRequest != null ? true : null,
+                hasHooks ? true : null,
+                config.WorkingDirectory,
+                config.Streaming is true ? true : null,
+                config.IncludeSubAgentStreamingEvents,
+                config.McpServers,
+                "direct",
+                config.CustomAgents,
+                config.DefaultAgent,
+                config.Agent,
+                config.ConfigDir,
+                config.EnableConfigDiscovery,
+                config.SkillDirectories,
+                config.DisabledSkills,
+                config.InfiniteSessions,
+                Commands: config.Commands?.Select(c => new CommandWireDefinition(c.Name, c.Description)).ToList(),
+                RequestElicitation: config.OnElicitationRequest != null,
+                Traceparent: traceparent,
+                Tracestate: tracestate,
+                ModelCapabilities: config.ModelCapabilities,
+                GitHubToken: config.GitHubToken,
+                RemoteSession: config.RemoteSession,
+                Cloud: config.Cloud,
+                InstructionDirectories: config.InstructionDirectories);
+
+            response = await InvokeRpcAsync<CreateSessionResponse>(
+                connection.Rpc, "session.create", [request], cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            guard.Dispose();
+            if (ex is not OperationCanceledException)
+            {
+                LoggingHelpers.LogTiming(_logger, LogLevel.Warning, ex,
+                    "CopilotClient.CreateCloudSessionAsync failed during session.create RPC. Elapsed={Elapsed}",
+                    totalTimestamp);
+            }
+            throw;
+        }
+
+        if (string.IsNullOrEmpty(response.SessionId))
+        {
+            // No id to issue session.destroy against; release the guard and surface the error.
+            // Any runtime session created on the other side may leak.
+            _logger.LogWarning("Cloud session.create response missing sessionId; runtime session may leak.");
+            guard.Dispose();
+            throw new InvalidOperationException(
+                "Cloud session.create response did not include a sessionId; cannot register session.");
+        }
+
+        var sessionId = response.SessionId;
+        var setupTimestamp = Stopwatch.GetTimestamp();
+        var session = new CopilotSession(sessionId, connection.Rpc, _logger, this);
+        session.RegisterTools(config.Tools ?? []);
+        session.RegisterPermissionHandler(config.OnPermissionRequest);
+        session.RegisterCommands(config.Commands);
+        session.RegisterElicitationHandler(config.OnElicitationRequest);
+        session.RegisterExitPlanModeHandler(config.OnExitPlanModeRequest);
+        session.RegisterAutoModeSwitchHandler(config.OnAutoModeSwitchRequest);
+        if (config.OnUserInputRequest != null)
+        {
+            session.RegisterUserInputHandler(config.OnUserInputRequest);
+        }
+        if (config.Hooks != null)
+        {
+            session.RegisterHooks(config.Hooks);
+        }
+        if (transformCallbacks != null)
+        {
+            session.RegisterTransformCallbacks(transformCallbacks);
+        }
+        if (config.OnEvent != null)
+        {
+            session.On<SessionEvent>(config.OnEvent);
+        }
+        LoggingHelpers.LogTiming(_logger, LogLevel.Debug, null,
+            "CopilotClient.CreateCloudSessionAsync local setup complete. Elapsed={Elapsed}, SessionId={SessionId}",
+            setupTimestamp,
+            sessionId);
+
+        try
+        {
+            RegisterSession(session);
+            ConfigureSessionFsHandlers(session, config.CreateSessionFsProvider);
+            session.StartProcessingEvents();
+            session.WorkspacePath = response.WorkspacePath;
+            session.SetCapabilities(response.Capabilities);
+            session.RemoteUrl = response.RemoteUrl;
+
+            // Flush buffered notifications and unblock parked request waiters
+            // now that the session is registered. Must happen before the guard
+            // is released so nothing races into a still-pending buffer.
+            FlushPendingForSession(sessionId, session);
+        }
+        catch (Exception ex)
+        {
+            session.RemoveFromClient();
+            guard.Dispose();
+            // Destroy the cloud session on the server — we already have the sessionId from the
+            // session.create response, so we can send session.destroy even though setup failed.
+            try { await session.DisposeAsync().ConfigureAwait(false); } catch { /* best effort */ }
+            LoggingHelpers.LogTiming(_logger, LogLevel.Warning, ex,
+                "CopilotClient.CreateCloudSessionAsync failed during post-response setup. Elapsed={Elapsed}, SessionId={SessionId}",
+                totalTimestamp,
+                sessionId);
+            throw;
+        }
+
+        guard.Dispose();
+
+        LoggingHelpers.LogTiming(_logger, LogLevel.Debug, null,
+            "CopilotClient.CreateCloudSessionAsync complete. Elapsed={Elapsed}, SessionId={SessionId}",
+            totalTimestamp,
+            sessionId);
+        return session;
+    }
+
+    /// <summary>
+    /// Enter pending-routing mode. While the returned guard is undisposed,
+    /// notifications and inbound requests addressed to session ids that are
+    /// not yet registered are buffered (up to <see cref="PendingSessionBufferLimit"/>
+    /// per id, drop-oldest) and replayed on registration. When the last guard is
+    /// disposed without registration, buffered events are dropped and parked request
+    /// waiters are faulted with an <see cref="InvalidOperationException"/>.
+    /// </summary>
+    private PendingSessionRoutingGuard BeginPendingSessionRouting()
+    {
+        lock (_pendingLock)
+        {
+            _pendingRoutingCount++;
+        }
+        return new PendingSessionRoutingGuard(this);
+    }
+
+    private void EndPendingSessionRouting()
+    {
+        List<TaskCompletionSource<CopilotSession>>? waiters = null;
+        lock (_pendingLock)
+        {
+            _pendingRoutingCount--;
+            if (_pendingRoutingCount == 0)
+            {
+                _pendingSessionEvents.Clear();
+                waiters = new List<TaskCompletionSource<CopilotSession>>();
+                foreach (var list in _pendingSessionWaiters.Values)
+                    waiters.AddRange(list);
+                _pendingSessionWaiters.Clear();
+            }
+        }
+
+        // Fault pending waiters outside the lock so TCS continuations don't run under it.
+        // Distinct phrasing from the overflow-eviction path so the runtime / debugging can tell
+        // the two cases apart. Matches the Rust SDK message in PR #1394 (commit e0ff254f).
+        if (waiters != null)
+        {
+            foreach (var tcs in waiters)
+            {
+                tcs.TrySetException(new InvalidOperationException(
+                    "pending session routing ended before session was registered"));
+            }
+        }
+    }
+
+    private void FlushPendingForSession(string sessionId, CopilotSession session)
+    {
+        List<SessionEvent> events;
+        List<TaskCompletionSource<CopilotSession>> waiters;
+
+        lock (_pendingLock)
+        {
+            _pendingSessionEvents.TryGetValue(sessionId, out var rawEvents);
+            _pendingSessionEvents.Remove(sessionId);
+            events = rawEvents ?? [];
+
+            _pendingSessionWaiters.TryGetValue(sessionId, out var rawWaiters);
+            _pendingSessionWaiters.Remove(sessionId);
+            waiters = rawWaiters ?? [];
+        }
+
+        foreach (var evt in events)
+        {
+            session.DispatchEvent(evt);
+        }
+
+        // Resolve waiters outside the lock so TCS continuations don't run under it.
+        foreach (var tcs in waiters)
+        {
+            tcs.TrySetResult(session);
+        }
+    }
+
+    private Task<CopilotSession> ResolveSessionAsync(string sessionId)
+    {
+        var session = GetSession(sessionId);
+        if (session != null)
+        {
+            return Task.FromResult(session);
+        }
+
+        lock (_pendingLock)
+        {
+            // Re-check inside lock to avoid the race where the session was registered
+            // between the unlock-free GetSession call and acquiring _pendingLock.
+            session = GetSession(sessionId);
+            if (session != null)
+            {
+                return Task.FromResult(session);
+            }
+
+            if (_pendingRoutingCount > 0)
+            {
+                var tcs = new TaskCompletionSource<CopilotSession>(TaskCreationOptions.RunContinuationsAsynchronously);
+                if (!_pendingSessionWaiters.TryGetValue(sessionId, out var list))
+                {
+                    list = [];
+                    _pendingSessionWaiters[sessionId] = list;
+                }
+
+                // Cap parked waiters per session id. When exceeded, reject the oldest with a
+                // distinct message so the runtime isn't left waiting on a hung request id.
+                // RunContinuationsAsynchronously ensures the continuation won't run under this lock.
+                // Matches the Rust SDK fix in PR #1394 (commit 491b4427).
+                if (list.Count >= PendingSessionBufferLimit)
+                {
+                    var oldest = list[0];
+                    list.RemoveAt(0);
+                    oldest.TrySetException(new InvalidOperationException("pending session buffer overflow"));
+                }
+
+                list.Add(tcs);
+                return tcs.Task;
+            }
+        }
+
+        return Task.FromException<CopilotSession>(new ArgumentException($"Unknown session {sessionId}"));
+    }
+
+    private sealed class PendingSessionRoutingGuard : IDisposable
+    {
+        private readonly CopilotClient _client;
+        private bool _disposed;
+
+        internal PendingSessionRoutingGuard(CopilotClient client) => _client = client;
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _client.EndPendingSessionRouting();
+        }
     }
 
     /// <summary>
@@ -1710,14 +2079,45 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
     {
         public void OnSessionEvent(string sessionId, JsonElement? @event)
         {
+            if (@event == null) return;
+
             var session = client.GetSession(sessionId);
-            if (session != null && @event != null)
+            if (session != null)
             {
                 var evt = SessionEvent.FromJson(@event.Value.GetRawText());
                 if (evt != null)
                 {
                     session.DispatchEvent(evt);
                 }
+                return;
+            }
+
+            // Session not yet registered — buffer if pending routing is active.
+            lock (client._pendingLock)
+            {
+                if (client._pendingRoutingCount == 0)
+                {
+                    return;
+                }
+
+                var parsed = SessionEvent.FromJson(@event.Value.GetRawText());
+                if (parsed == null) return;
+
+                if (!client._pendingSessionEvents.TryGetValue(sessionId, out var buf))
+                {
+                    buf = [];
+                    client._pendingSessionEvents[sessionId] = buf;
+                }
+
+                if (buf.Count >= PendingSessionBufferLimit)
+                {
+                    buf.RemoveAt(0);
+                    client._logger.LogWarning(
+                        "Pending session event buffer full for session {SessionId}; dropping oldest event.",
+                        sessionId);
+                }
+
+                buf.Add(parsed);
             }
         }
 
@@ -1747,7 +2147,7 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
 
         public async ValueTask<UserInputRequestResponse> OnUserInputRequest(string sessionId, string question, IList<string>? choices = null, bool? allowFreeform = null)
         {
-            var session = client.GetSession(sessionId) ?? throw new ArgumentException($"Unknown session {sessionId}");
+            var session = await client.ResolveSessionAsync(sessionId);
             var request = new UserInputRequest
             {
                 Question = question,
@@ -1766,7 +2166,7 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
             IList<string>? actions = null,
             string? recommendedAction = null)
         {
-            var session = client.GetSession(sessionId) ?? throw new ArgumentException($"Unknown session {sessionId}");
+            var session = await client.ResolveSessionAsync(sessionId);
             var request = new ExitPlanModeRequest
             {
                 Summary = summary,
@@ -1783,7 +2183,7 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
             string? errorCode = null,
             double? retryAfterSeconds = null)
         {
-            var session = client.GetSession(sessionId) ?? throw new ArgumentException($"Unknown session {sessionId}");
+            var session = await client.ResolveSessionAsync(sessionId);
             var response = await session.HandleAutoModeSwitchRequestAsync(new AutoModeSwitchRequest
             {
                 ErrorCode = errorCode,
@@ -1794,14 +2194,14 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
 
         public async ValueTask<HooksInvokeResponse> OnHooksInvoke(string sessionId, string hookType, JsonElement input)
         {
-            var session = client.GetSession(sessionId) ?? throw new ArgumentException($"Unknown session {sessionId}");
+            var session = await client.ResolveSessionAsync(sessionId);
             var output = await session.HandleHooksInvokeAsync(hookType, input);
             return new HooksInvokeResponse(output);
         }
 
         public async ValueTask<SystemMessageTransformRpcResponse> OnSystemMessageTransform(string sessionId, JsonElement sections)
         {
-            var session = client.GetSession(sessionId) ?? throw new ArgumentException($"Unknown session {sessionId}");
+            var session = await client.ResolveSessionAsync(sessionId);
             return await session.HandleSystemMessageTransformAsync(sections);
         }
     }
@@ -1888,7 +2288,8 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
     internal record CreateSessionResponse(
         string SessionId,
         string? WorkspacePath,
-        SessionCapabilities? Capabilities = null);
+        SessionCapabilities? Capabilities = null,
+        string? RemoteUrl = null);
 
     internal record ResumeSessionRequest(
         string SessionId,
