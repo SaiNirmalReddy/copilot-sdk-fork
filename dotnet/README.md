@@ -133,6 +133,47 @@ Resume an existing session. Returns the session with `WorkspacePath` populated i
 
 - `OnPermissionRequest` - Optional handler called before each tool execution to approve or deny it. See [Permission Handling](#permission-handling) section.
 
+##### `CreateCloudSessionAsync(CloudSessionConfig config): Task<CopilotSession>`
+
+Create a session that is hosted by and routed to a remote Copilot cloud server rather than the local CLI. The returned `CopilotSession` behaves identically to a locally-created session: send messages, receive events, and use tools through the same API.
+
+A `Cloud` configuration is required; passing `Cloud = null` throws `ArgumentException`. Conversely, passing a `Cloud` config to the regular `CreateSessionAsync` also throws, preventing accidental misconfiguration.
+
+The session ID is assigned by the cloud server. After `CreateCloudSessionAsync` returns, `session.SessionId` contains the server-assigned ID and `session.RemoteUrl` contains the URL of the cloud server that owns the session. Any RPC requests (user-input, permission, hooks, etc.) that arrive from the server before the session is fully registered are buffered and replayed automatically — your handlers will never miss an early request.
+
+**CloudSessionConfig:**
+
+- `Cloud` *(required)* — Cloud routing options:
+  - `Repository` *(required)* — The repository to route the session to:
+    - `Nwo` *(required)* — Full `owner/repo` name (e.g. `"github/my-repo"`)
+    - `Ref` *(optional)* — Branch or tag ref (e.g. `"refs/heads/main"`)
+  - `SdkOptions` *(optional)* — Pass-through options forwarded to the cloud provider
+- `Model`, `ReasoningEffort`, `Tools`, `SystemMessage`, `AvailableTools`, `ExcludedTools`, `Provider`, `Streaming`, `InfiniteSessions`, `OnPermissionRequest`, `OnUserInputRequest`, `Hooks` — Same as `SessionConfig`
+
+**Returned session properties:**
+
+- `SessionId` — Server-assigned session ID
+- `RemoteUrl` — URL of the cloud server that owns this session
+
+```csharp
+await using var session = await client.CreateCloudSessionAsync(new CloudSessionConfig
+{
+    Cloud = new CloudSessionOptions
+    {
+        Repository = new CloudSessionRepository { Nwo = "github/my-repo" }
+    },
+    OnUserInputRequest = async (request, _) =>
+    {
+        Console.Write($"{request.Question} ");
+        return new UserInputResponse { Answer = Console.ReadLine()! };
+    }
+});
+
+Console.WriteLine($"Cloud session: {session.SessionId} at {session.RemoteUrl}");
+var reply = await session.SendAsync(new MessageOptions { Content = "Hello from the cloud!" });
+Console.WriteLine(reply);
+```
+
 ##### `PingAsync(string? message = null): Task<PingResponse>`
 
 Ping the server to check connectivity.
@@ -193,6 +234,7 @@ Represents a single conversation session.
 
 - `SessionId` - The unique identifier for this session
 - `WorkspacePath` - Path to the session workspace directory when infinite sessions are enabled. Contains `checkpoints/`, `plan.md`, and `files/` subdirectories. Null if infinite sessions are disabled.
+- `RemoteUrl` - URL of the cloud server that owns this session. Non-null only for sessions created via `CreateCloudSessionAsync`.
 
 #### Methods
 
