@@ -27,10 +27,13 @@ use crate::types::{
     CommandContext, CommandDefinition, CommandHandler, CreateSessionResult, ElicitationRequest,
     ElicitationResult, ExitPlanModeData, GetMessagesResponse, MessageOptions,
     PermissionRequestData, RequestId, ResumeSessionConfig, SectionOverride, SessionCapabilities,
-    SessionConfig, SessionEvent, SessionId, SetModelOptions, SystemMessageConfig, ToolInvocation,
-    ToolResult, ToolResultExpanded, TraceContext, UiInputOptions, ensure_attachment_display_names,
+    SessionConfig, SessionConfigRuntime, SessionEvent, SessionId, SetModelOptions,
+    SystemMessageConfig, ToolInvocation, ToolResult, ToolResultExpanded, TraceContext,
+    UiInputOptions, ensure_attachment_display_names,
 };
 use crate::{Client, Error, JsonRpcResponse, SessionError, SessionEventNotification, error_codes};
+
+type CommandHandlerMap = HashMap<String, Arc<dyn CommandHandler>>;
 
 /// Bundle of the per-session callbacks the SDK dispatches to. Built from a
 /// [`SessionConfig`] / [`ResumeSessionConfig`] at
@@ -47,6 +50,19 @@ pub(crate) struct SessionHandlers {
     pub exit_plan_mode: Option<Arc<dyn ExitPlanModeHandler>>,
     pub auto_mode_switch: Option<Arc<dyn AutoModeSwitchHandler>>,
     pub tools: Arc<HashMap<String, Arc<dyn crate::tool::ToolHandler>>>,
+}
+
+/// Bundle of everything `create_session` / `create_cloud_session` /
+/// `resume_session` need to spawn the per-session event loop, extracted
+/// from a `SessionConfigRuntime`. Built by [`prepare_session_runtime`].
+struct PreparedSessionRuntime {
+    handlers: SessionHandlers,
+    hooks: Option<Arc<dyn SessionHooks>>,
+    transforms: Option<Arc<dyn SystemMessageTransform>>,
+    command_handlers: Arc<CommandHandlerMap>,
+    session_fs_provider: Option<Arc<dyn SessionFsProvider>>,
+    commands_count: usize,
+    has_hooks: bool,
 }
 
 /// Shared state between a [`Session`] and its event loop, used by [`Session::send_and_wait`].
@@ -777,6 +793,13 @@ impl Client {
     /// broadcast (and silently skips dispatch if one arrives anyway).
     pub async fn create_session(&self, mut config: SessionConfig) -> Result<Session, Error> {
         let total_start = Instant::now();
+        if config.cloud.is_some() {
+            return Err(Error::InvalidConfig(
+                "Client::create_session does not support cloud sessions; \
+                 use Client::create_cloud_session instead"
+                    .to_string(),
+            ));
+        }
         let session_id = config
             .session_id
             .clone()
@@ -788,40 +811,18 @@ impl Client {
         if let Some(transforms) = config.system_message_transform.clone() {
             inject_transform_sections(&mut config, transforms.as_ref());
         }
-        let (wire, mut runtime) = config.into_wire(session_id.clone())?;
-
-        let permission_handler = crate::permission::resolve_handler(
-            runtime.permission_handler.take(),
-            runtime.permission_policy.take(),
-        );
-        let handlers = SessionHandlers {
-            permission: permission_handler,
-            elicitation: runtime.elicitation_handler.take(),
-            user_input: runtime.user_input_handler.take(),
-            exit_plan_mode: runtime.exit_plan_mode_handler.take(),
-            auto_mode_switch: runtime.auto_mode_switch_handler.take(),
-            tools: Arc::new(std::mem::take(&mut runtime.tool_handlers)),
-        };
-        let hooks = runtime.hooks_handler.take();
-        let transforms = runtime.system_message_transform.take();
+        let (wire, runtime) = config.into_wire(session_id.clone())?;
         let tools_count = wire.tools.as_ref().map_or(0, Vec::len);
-        let commands_count = runtime.commands.as_ref().map_or(0, Vec::len);
-        let has_hooks = hooks.is_some();
-        let command_handlers = build_command_handler_map(runtime.commands.as_deref());
-        let session_fs_provider = runtime.session_fs_provider.take();
-        if self.inner.session_fs_configured && session_fs_provider.is_none() {
-            return Err(Error::Session(SessionError::SessionFsProviderRequired));
-        }
-        if self.inner.session_fs_sqlite_declared
-            && let Some(ref provider) = session_fs_provider
-            && provider.sqlite().is_none()
-        {
-            return Err(Error::InvalidConfig(
-                "SessionFs capabilities declare SQLite support but the provider \
-                 does not implement SessionFsSqliteProvider"
-                    .to_string(),
-            ));
-        }
+
+        let PreparedSessionRuntime {
+            handlers,
+            hooks,
+            transforms,
+            command_handlers,
+            session_fs_provider,
+            commands_count,
+            has_hooks,
+        } = prepare_session_runtime(self, runtime)?;
 
         let mut params = serde_json::to_value(&wire)?;
         let trace_ctx = self.resolve_trace_context().await;
@@ -906,6 +907,163 @@ impl Client {
         })
     }
 
+    /// Create a cloud (Mission Control) session.
+    ///
+    /// Unlike [`Self::create_session`], the runtime owns the session ID:
+    /// the SDK does **not** pre-assign one, and the caller must not set
+    /// `session_id` or `provider` on the config. Send a cloud config built
+    /// with [`SessionConfig::with_cloud`]. The returned [`Session`] is
+    /// keyed by the runtime-assigned Mission Control id.
+    ///
+    /// Routing for the runtime-chosen id is buffered (bounded, drop-oldest)
+    /// from before `session.create` is sent until the response arrives, so
+    /// `session.event` notifications and inbound JSON-RPC requests that
+    /// arrive early are delivered after registration.
+    pub async fn create_cloud_session(&self, mut config: SessionConfig) -> Result<Session, Error> {
+        let total_start = Instant::now();
+        if config.cloud.is_none() {
+            return Err(Error::InvalidConfig(
+                "Client::create_cloud_session requires a cloud config; \
+                 build the config with SessionConfig::with_cloud"
+                    .to_string(),
+            ));
+        }
+        if config.session_id.is_some() {
+            return Err(Error::InvalidConfig(
+                "Client::create_cloud_session does not accept a caller-provided \
+                 session_id; the runtime assigns the session id"
+                    .to_string(),
+            ));
+        }
+        if config.provider.is_some() {
+            return Err(Error::InvalidConfig(
+                "Client::create_cloud_session does not accept a caller-provided \
+                 provider; the runtime selects the provider"
+                    .to_string(),
+            ));
+        }
+        if config.hooks_handler.is_some() && config.hooks.is_none() {
+            config.hooks = Some(true);
+        }
+        if let Some(transforms) = config.system_message_transform.clone() {
+            inject_transform_sections(&mut config, transforms.as_ref());
+        }
+        let (wire, runtime) = config.into_cloud_wire()?;
+        let tools_count = wire.tools.as_ref().map_or(0, Vec::len);
+
+        let PreparedSessionRuntime {
+            handlers,
+            hooks,
+            transforms,
+            command_handlers,
+            session_fs_provider,
+            commands_count,
+            has_hooks,
+        } = prepare_session_runtime(self, runtime)?;
+
+        let mut params = serde_json::to_value(&wire)?;
+        let trace_ctx = self.resolve_trace_context().await;
+        inject_trace_context(&mut params, &trace_ctx);
+
+        let setup_start = Instant::now();
+        self.ensure_session_router_started();
+        let pending_guard = self.begin_pending_session_routing();
+        tracing::debug!(
+            elapsed_ms = setup_start.elapsed().as_millis(),
+            tools_count,
+            commands_count,
+            has_hooks,
+            "Client::create_cloud_session local setup complete"
+        );
+
+        let rpc_start = Instant::now();
+        let result = self.call("session.create", Some(params)).await?;
+        tracing::debug!(
+            elapsed_ms = rpc_start.elapsed().as_millis(),
+            "Client::create_cloud_session session creation request completed successfully"
+        );
+        // Pre-extract the runtime-assigned session id from the raw response so
+        // we can `session.destroy` it on decode failure without cloning the
+        // whole response. On success we still consume `result` to decode.
+        let recovered_session_id = result
+            .get("sessionId")
+            .and_then(|value| value.as_str())
+            .map(SessionId::from);
+        let create_result: CreateSessionResult = match serde_json::from_value(result) {
+            Ok(result) => result,
+            Err(error) => {
+                // Keep the pending guard alive across the destroy so any
+                // straggler events for the runtime-assigned id are still
+                // routed (and then dropped on guard release).
+                if let Some(recovered_id) = recovered_session_id {
+                    if let Err(destroy_err) = self
+                        .call(
+                            "session.destroy",
+                            Some(serde_json::json!({ "sessionId": recovered_id })),
+                        )
+                        .await
+                    {
+                        tracing::warn!(
+                            session_id = %recovered_id,
+                            error = %destroy_err,
+                            "failed to destroy cloud session after create response decode failed"
+                        );
+                    }
+                } else {
+                    tracing::warn!(
+                        "Client::create_cloud_session: decode failure with no recoverable session id; \
+                         skipping session.destroy (runtime session may leak)"
+                    );
+                }
+                drop(pending_guard);
+                return Err(error.into());
+            }
+        };
+        let session_id = create_result.session_id.clone();
+
+        let capabilities = Arc::new(parking_lot::RwLock::new(
+            create_result.capabilities.unwrap_or_default(),
+        ));
+        let channels = self.register_session(&session_id);
+        drop(pending_guard);
+
+        let idle_waiter = Arc::new(ParkingLotMutex::new(None));
+        let shutdown = CancellationToken::new();
+        let (event_tx, _) = tokio::sync::broadcast::channel(512);
+        let event_loop = spawn_event_loop(
+            session_id.clone(),
+            self.clone(),
+            handlers,
+            hooks,
+            transforms,
+            command_handlers,
+            session_fs_provider,
+            channels,
+            idle_waiter.clone(),
+            capabilities.clone(),
+            event_tx.clone(),
+            shutdown.clone(),
+        );
+
+        tracing::debug!(
+            elapsed_ms = total_start.elapsed().as_millis(),
+            session_id = %session_id,
+            "Client::create_cloud_session complete"
+        );
+        Ok(Session {
+            id: session_id,
+            cwd: self.cwd().clone(),
+            workspace_path: create_result.workspace_path,
+            remote_url: create_result.remote_url,
+            client: self.clone(),
+            event_loop: ParkingLotMutex::new(Some(event_loop)),
+            shutdown,
+            idle_waiter,
+            capabilities,
+            event_tx,
+        })
+    }
+
     /// Resume an existing session on the CLI.
     ///
     /// Sends `session.resume` and `session.skills.reload`, registers the
@@ -925,40 +1083,18 @@ impl Client {
         if let Some(transforms) = config.system_message_transform.clone() {
             inject_transform_sections_resume(&mut config, transforms.as_ref());
         }
-        let (wire, mut runtime) = config.into_wire()?;
-
-        let permission_handler = crate::permission::resolve_handler(
-            runtime.permission_handler.take(),
-            runtime.permission_policy.take(),
-        );
-        let handlers = SessionHandlers {
-            permission: permission_handler,
-            elicitation: runtime.elicitation_handler.take(),
-            user_input: runtime.user_input_handler.take(),
-            exit_plan_mode: runtime.exit_plan_mode_handler.take(),
-            auto_mode_switch: runtime.auto_mode_switch_handler.take(),
-            tools: Arc::new(std::mem::take(&mut runtime.tool_handlers)),
-        };
-        let hooks = runtime.hooks_handler.take();
-        let transforms = runtime.system_message_transform.take();
+        let (wire, runtime) = config.into_wire()?;
         let tools_count = wire.tools.as_ref().map_or(0, Vec::len);
-        let commands_count = runtime.commands.as_ref().map_or(0, Vec::len);
-        let has_hooks = hooks.is_some();
-        let command_handlers = build_command_handler_map(runtime.commands.as_deref());
-        let session_fs_provider = runtime.session_fs_provider.take();
-        if self.inner.session_fs_configured && session_fs_provider.is_none() {
-            return Err(Error::Session(SessionError::SessionFsProviderRequired));
-        }
-        if self.inner.session_fs_sqlite_declared
-            && let Some(ref provider) = session_fs_provider
-            && provider.sqlite().is_none()
-        {
-            return Err(Error::InvalidConfig(
-                "SessionFs capabilities declare SQLite support but the provider \
-                 does not implement SessionFsSqliteProvider"
-                    .to_string(),
-            ));
-        }
+
+        let PreparedSessionRuntime {
+            handlers,
+            hooks,
+            transforms,
+            command_handlers,
+            session_fs_provider,
+            commands_count,
+            has_hooks,
+        } = prepare_session_runtime(self, runtime)?;
 
         let mut params = serde_json::to_value(&wire)?;
         let trace_ctx = self.resolve_trace_context().await;
@@ -1082,8 +1218,6 @@ impl Client {
     }
 }
 
-type CommandHandlerMap = HashMap<String, Arc<dyn CommandHandler>>;
-
 fn build_command_handler_map(commands: Option<&[CommandDefinition]>) -> Arc<CommandHandlerMap> {
     let map = match commands {
         Some(commands) => commands
@@ -1094,6 +1228,60 @@ fn build_command_handler_map(commands: Option<&[CommandDefinition]>) -> Arc<Comm
         None => HashMap::new(),
     };
     Arc::new(map)
+}
+
+fn prepare_session_runtime(
+    client: &Client,
+    runtime: SessionConfigRuntime,
+) -> Result<PreparedSessionRuntime, Error> {
+    let SessionConfigRuntime {
+        permission_handler,
+        permission_policy,
+        elicitation_handler,
+        user_input_handler,
+        exit_plan_mode_handler,
+        auto_mode_switch_handler,
+        hooks_handler,
+        system_message_transform,
+        tool_handlers,
+        session_fs_provider,
+        commands,
+    } = runtime;
+    let handlers = SessionHandlers {
+        permission: crate::permission::resolve_handler(permission_handler, permission_policy),
+        elicitation: elicitation_handler,
+        user_input: user_input_handler,
+        exit_plan_mode: exit_plan_mode_handler,
+        auto_mode_switch: auto_mode_switch_handler,
+        tools: Arc::new(tool_handlers),
+    };
+    let commands_count = commands.as_ref().map_or(0, Vec::len);
+    let has_hooks = hooks_handler.is_some();
+    let command_handlers = build_command_handler_map(commands.as_deref());
+
+    if client.inner.session_fs_configured && session_fs_provider.is_none() {
+        return Err(Error::Session(SessionError::SessionFsProviderRequired));
+    }
+    if client.inner.session_fs_sqlite_declared
+        && let Some(ref provider) = session_fs_provider
+        && provider.sqlite().is_none()
+    {
+        return Err(Error::InvalidConfig(
+            "SessionFs capabilities declare SQLite support but the provider \
+             does not implement SessionFsSqliteProvider"
+                .to_string(),
+        ));
+    }
+
+    Ok(PreparedSessionRuntime {
+        handlers,
+        hooks: hooks_handler,
+        transforms: system_message_transform,
+        command_handlers,
+        session_fs_provider,
+        commands_count,
+        has_hooks,
+    })
 }
 
 #[allow(clippy::too_many_arguments)]

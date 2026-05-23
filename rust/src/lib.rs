@@ -1577,10 +1577,24 @@ impl Client {
         &self,
         session_id: &SessionId,
     ) -> crate::router::SessionChannels {
+        self.ensure_session_router_started();
+        self.inner.router.register(session_id)
+    }
+
+    pub(crate) fn ensure_session_router_started(&self) {
         self.inner
             .router
             .ensure_started(&self.inner.notification_tx, &self.inner.request_rx);
-        self.inner.router.register(session_id)
+    }
+
+    /// Enter pending-routing mode on the router. While the returned guard is
+    /// alive, notifications and requests addressed to session ids that are
+    /// not yet registered are buffered instead of being dropped. Used by
+    /// [`Client::create_cloud_session`] so the SDK can receive events that
+    /// the runtime emits between `session.create` and the response.
+    pub(crate) fn begin_pending_session_routing(&self) -> crate::router::PendingSessionRouting {
+        self.ensure_session_router_started();
+        self.inner.router.begin_pending_session_routing()
     }
 
     /// Unregister a session, dropping its per-session channels.

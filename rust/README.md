@@ -82,7 +82,25 @@ With the default `CliProgram::Resolve`, `Client::start()` resolves the CLI in th
 
 ### Session
 
-Created via `Client::create_session` or `Client::resume_session`. Owns an internal event loop that dispatches CLI callbacks to the focused handler traits you install on `SessionConfig`, and broadcasts session events through `subscribe()`.
+Created via `Client::create_session`, `Client::create_cloud_session`, or `Client::resume_session`. Owns an internal event loop that dispatches CLI callbacks to the focused handler traits you install on `SessionConfig`, and broadcasts session events through `subscribe()`.
+
+#### Cloud sessions
+
+`Client::create_cloud_session` creates a Mission Control–backed cloud session. The runtime owns the session ID: do **not** set `session_id` or `provider` on the config (the SDK rejects both with `Error::InvalidConfig`). Build the config with `SessionConfig::with_cloud(...)`; `Client::create_session` will reject any config that has `cloud` set.
+
+```rust,ignore
+use github_copilot_sdk::types::{CloudSessionOptions, CloudSessionRepository, SessionConfig};
+
+let cloud = CloudSessionOptions::with_repository(
+    CloudSessionRepository::new("github", "copilot-sdk").with_branch("main"),
+);
+let session = client
+    .create_cloud_session(SessionConfig::default().with_cloud(cloud))
+    .await?;
+println!("cloud session id: {}", session.id());
+```
+
+The SDK buffers any `session.event` notifications or inbound JSON-RPC requests that arrive before the `session.create` response (bounded, drop-oldest) and replays them once the runtime-assigned session ID is registered.
 
 ```rust,ignore
 use github_copilot_sdk::MessageOptions;

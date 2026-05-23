@@ -1357,8 +1357,25 @@ impl SessionConfig {
     ///
     /// [`SessionCreateWire`]: crate::wire::SessionCreateWire
     pub(crate) fn into_wire(
-        mut self,
+        self,
         session_id: SessionId,
+    ) -> Result<(crate::wire::SessionCreateWire, SessionConfigRuntime), crate::Error> {
+        self.into_create_wire(Some(session_id))
+    }
+
+    /// Consume this config to produce the [`SessionCreateWire`] payload for
+    /// cloud `session.create`. Cloud create follows the runtime contract:
+    /// the caller does not provide a `sessionId`; the runtime returns the
+    /// Mission Control task/session ID.
+    pub(crate) fn into_cloud_wire(
+        self,
+    ) -> Result<(crate::wire::SessionCreateWire, SessionConfigRuntime), crate::Error> {
+        self.into_create_wire(None)
+    }
+
+    fn into_create_wire(
+        mut self,
+        session_id: Option<SessionId>,
     ) -> Result<(crate::wire::SessionCreateWire, SessionConfigRuntime), crate::Error> {
         let permission_active =
             self.permission_handler.is_some() || self.permission_policy.is_some();
