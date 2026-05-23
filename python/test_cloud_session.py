@@ -13,7 +13,11 @@ from uuid import uuid4
 import pytest
 
 from copilot import CopilotClient, RuntimeConnection
-from copilot.client import CloudSessionOptions, CloudSessionRepository
+from copilot.client import (
+    _PENDING_SESSION_BUFFER_LIMIT,
+    CloudSessionOptions,
+    CloudSessionRepository,
+)
 from copilot.session import ProviderConfig, UserInputRequest, UserInputResponse
 from e2e.testharness import CLI_PATH
 
@@ -275,5 +279,135 @@ class TestCreateCloudSessionParksInboundRequests:
             assert result["answer"] == "blue"
             assert result["wasFreeform"] is True
             assert answered == ["Pick a color"]
+        finally:
+            await client.force_stop()
+
+
+# ---------------------------------------------------------------------------
+# Test 8: pending request buffer overflow emits an error (not silent drop)
+# ---------------------------------------------------------------------------
+
+
+class TestPendingRequestBufferOverflow:
+    @pytest.mark.asyncio
+    async def test_oldest_waiter_rejected_on_overflow(self):
+        """When the parked-request buffer is full, the oldest waiter is rejected.
+
+        The rejection causes the JSON-RPC dispatch layer to send a JSON-RPC error
+        response (code -32603) rather than silently hanging the runtime on that
+        request id.  The remaining _PENDING_SESSION_BUFFER_LIMIT waiters resolve
+        normally once the session is registered.
+        """
+        session_id = "overflow-session"
+        client = CopilotClient(connection=RuntimeConnection.for_stdio(path=CLI_PATH))
+        await client.start()
+        try:
+            # Enter pending-routing mode manually so _resolve_session parks futures.
+            guard = client._begin_pending_session_routing()
+
+            total = _PENDING_SESSION_BUFFER_LIMIT + 1  # 129 concurrent waiters
+            tasks = [
+                asyncio.ensure_future(client._resolve_session(session_id))
+                for _ in range(total)
+            ]
+
+            # Yield so all _resolve_session calls park on futures.
+            await asyncio.sleep(0)
+            await asyncio.sleep(0)
+
+            # The oldest (tasks[0]) should now be rejected with the overflow message.
+            assert tasks[0].done(), "oldest waiter should have been rejected synchronously"
+            with pytest.raises(ValueError, match="pending session buffer overflow"):
+                tasks[0].result()
+
+            # The remaining 128 are still parked.
+            assert all(not t.done() for t in tasks[1:]), "remaining waiters should still be parked"
+
+            # Register the session so the remaining waiters resolve.
+            from copilot.session import CopilotSession
+
+            session = CopilotSession(session_id, client._client, workspace_path=None)
+            with client._sessions_lock:
+                client._sessions[session_id] = session
+            client._flush_pending_for_session(session_id, session)
+            guard.dispose()
+
+            # Let the event loop settle.
+            await asyncio.sleep(0)
+
+            resolved_sessions = await asyncio.gather(*tasks[1:], return_exceptions=True)
+            assert all(s is session for s in resolved_sessions), (
+                "all remaining parked waiters should resolve to the registered session"
+            )
+        finally:
+            await client.force_stop()
+
+
+# ---------------------------------------------------------------------------
+# Test 9: guard drop without registration rejects parked requests
+# ---------------------------------------------------------------------------
+
+
+class TestPendingRequestGuardDropWithoutRegistration:
+    @pytest.mark.asyncio
+    async def test_parked_request_rejected_when_create_fails(self):
+        """When session.create fails, parked request waiters get a distinct error.
+
+        The error message "pending session routing ended before session was registered"
+        must differ from the overflow message so the two failure modes are
+        distinguishable in logs and the runtime gets a proper JSON-RPC error
+        response rather than hanging.
+        """
+        client = CopilotClient(connection=RuntimeConnection.for_stdio(path=CLI_PATH))
+        await client.start()
+        try:
+            create_response_gate: asyncio.Future[dict] = asyncio.get_event_loop().create_future()
+
+            async def mock_request(method, params):
+                if method == "session.create":
+                    return await create_response_gate
+                return {}
+
+            client._client.request = mock_request
+
+            session_id = "failing-cloud-session"
+            create_task = asyncio.ensure_future(
+                client.create_cloud_session(**_cloud_config())
+            )
+
+            # Yield so create_cloud_session enters pending-routing mode.
+            await asyncio.sleep(0)
+            await asyncio.sleep(0)
+
+            # Park an inbound request while the create is in flight.
+            user_input_handler = client._client.request_handlers.get("userInput.request")
+            assert user_input_handler is not None, "userInput.request handler not registered"
+
+            input_task = asyncio.ensure_future(
+                user_input_handler(
+                    {
+                        "sessionId": session_id,
+                        "question": "Pick a color",
+                        "choices": ["red", "blue"],
+                        "allowFreeform": True,
+                    }
+                )
+            )
+
+            await asyncio.sleep(0)
+            assert not input_task.done(), "handler should be parked waiting for session"
+
+            # Make session.create fail; this causes create_cloud_session to call
+            # guard.dispose() without registering any session id.
+            create_response_gate.set_exception(RuntimeError("simulated session.create failure"))
+            with pytest.raises(RuntimeError, match="simulated session.create failure"):
+                await asyncio.wait_for(create_task, timeout=5.0)
+
+            # The parked waiter should now be rejected with the routing-ended message.
+            await asyncio.sleep(0)
+            assert input_task.done(), "parked waiter should be rejected after guard drop"
+            expected_msg = "pending session routing ended before session was registered"
+            with pytest.raises(ValueError, match=expected_msg):
+                await input_task
         finally:
             await client.force_stop()

@@ -1037,11 +1037,11 @@ class _PendingSessionRoutingGuard:
                 self._client._pending_session_waiters.clear()
         for future in waiters_to_reject:
             if not future.done():
+                # Distinct phrasing from the overflow-eviction path so debugging
+                # can tell the two cases apart.  Matches Rust SDK (commit e0ff254f)
+                # and TS SDK (commit c167bc3e).
                 future.set_exception(
-                    ValueError(
-                        "Cloud session.create completed without registering this session id; "
-                        "inbound request dropped"
-                    )
+                    ValueError("pending session routing ended before session was registered")
                 )
 
 
@@ -2312,12 +2312,22 @@ class CopilotClient:
         ends.  Otherwise raise :class:`ValueError` immediately.
         """
         future: asyncio.Future[CopilotSession] | None = None
+        evicted: asyncio.Future[CopilotSession] | None = None
         with self._sessions_lock:
             session = self._sessions.get(session_id)
             if session is None and self._pending_routing_count > 0:
                 loop = asyncio.get_running_loop()
                 future = loop.create_future()
-                self._pending_session_waiters.setdefault(session_id, []).append(future)
+                waiters = self._pending_session_waiters.setdefault(session_id, [])
+                # Cap parked waiters at the same limit as notifications.  When exceeded,
+                # reject the oldest so the runtime gets a JSON-RPC error response
+                # (code -32603) rather than hanging on the request id until timeout.
+                # Matches Rust SDK fix (commit 491b4427) and TS SDK (commit c167bc3e).
+                if len(waiters) >= _PENDING_SESSION_BUFFER_LIMIT:
+                    evicted = waiters.pop(0)
+                waiters.append(future)
+        if evicted is not None and not evicted.done():
+            evicted.set_exception(ValueError("pending session buffer overflow"))
         if session is not None:
             return session
         if future is not None:
