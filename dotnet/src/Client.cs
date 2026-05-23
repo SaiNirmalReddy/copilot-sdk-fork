@@ -904,23 +904,29 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
 
     private void EndPendingSessionRouting()
     {
+        List<TaskCompletionSource<CopilotSession>>? waiters = null;
         lock (_pendingLock)
         {
             _pendingRoutingCount--;
             if (_pendingRoutingCount == 0)
             {
                 _pendingSessionEvents.Clear();
-                var waiters = new List<TaskCompletionSource<CopilotSession>>();
+                waiters = new List<TaskCompletionSource<CopilotSession>>();
                 foreach (var list in _pendingSessionWaiters.Values)
                     waiters.AddRange(list);
                 _pendingSessionWaiters.Clear();
+            }
+        }
 
-                // Fault pending waiters outside the lock so TCS continuations don't run under it.
-                foreach (var tcs in waiters)
-                {
-                    tcs.TrySetException(new InvalidOperationException(
-                        "Cloud session.create completed without registering this sessionId; request dropped."));
-                }
+        // Fault pending waiters outside the lock so TCS continuations don't run under it.
+        // Distinct phrasing from the overflow-eviction path so the runtime / debugging can tell
+        // the two cases apart. Matches the Rust SDK message in PR #1394 (commit e0ff254f).
+        if (waiters != null)
+        {
+            foreach (var tcs in waiters)
+            {
+                tcs.TrySetException(new InvalidOperationException(
+                    "pending session routing ended before session was registered"));
             }
         }
     }
@@ -979,6 +985,18 @@ public sealed partial class CopilotClient : IDisposable, IAsyncDisposable
                     list = [];
                     _pendingSessionWaiters[sessionId] = list;
                 }
+
+                // Cap parked waiters per session id. When exceeded, reject the oldest with a
+                // distinct message so the runtime isn't left waiting on a hung request id.
+                // RunContinuationsAsynchronously ensures the continuation won't run under this lock.
+                // Matches the Rust SDK fix in PR #1394 (commit 491b4427).
+                if (list.Count >= PendingSessionBufferLimit)
+                {
+                    var oldest = list[0];
+                    list.RemoveAt(0);
+                    oldest.TrySetException(new InvalidOperationException("pending session buffer overflow"));
+                }
+
                 list.Add(tcs);
                 return tcs.Task;
             }

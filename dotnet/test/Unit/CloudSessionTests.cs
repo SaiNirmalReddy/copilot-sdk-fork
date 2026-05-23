@@ -267,6 +267,93 @@ public sealed class CloudSessionTests
         Assert.Equal("blue", response!["answer"]?.ToString());
     }
 
+    // -------------------------------------------------------------------------
+    // 8. Pending-waiter overflow: oldest is rejected, remaining 128 succeed
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task PendingRequestWaiterOverflow_RejectsOldestWithOverflowMessage()
+    {
+        const string cloudId = "overflow-session";
+        const int requestCount = 129; // one beyond the 128-waiter cap
+
+        await using var server = await FakeCloudServer.StartAsync(
+            cloudSessionId: cloudId,
+            earlyInboundRequestCount: requestCount);
+
+        await using var client = new CopilotClient(new CopilotClientOptions
+        { Connection = RuntimeConnection.ForUri(server.Url) });
+
+        await using var _ = await client.CreateCloudSessionAsync(new SessionConfig
+        {
+            OnPermissionRequest = PermissionHandler.ApproveAll,
+            Cloud = new CloudSessionOptions
+            {
+                Repository = new CloudSessionRepository { Owner = "github", Name = "copilot-sdk" }
+            },
+            OnUserInputRequest = (_, _) => Task.FromResult(new UserInputResponse { Answer = "yes", WasFreeform = false })
+        });
+
+        var responses = await server.WaitForAllInboundResponses(requestCount, TimeSpan.FromSeconds(10));
+
+        // Exactly one overflow eviction, 128 successful completions.
+        Assert.Equal(1, responses.Count(r => r.IsError));
+        Assert.Equal(128, responses.Count(r => !r.IsError));
+
+        var err = responses.Single(r => r.IsError);
+        Assert.Contains("pending session buffer overflow", err.ErrorMessage ?? "");
+    }
+
+    // -------------------------------------------------------------------------
+    // 9. Guard-drop path: parked requests are rejected with distinct message
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task PendingSessionGuardDrop_RejectsParkedRequestWithDistinctMessage()
+    {
+        const string cloudId = "guard-drop-session";
+        const int inboundRequestId = 500;
+
+        await using var server = await FakeCloudServer.StartAsync(
+            cloudSessionId: cloudId,
+            failSessionCreate: true,
+            earlyInboundRequest: new Dictionary<string, object?>
+            {
+                ["jsonrpc"] = "2.0",
+                ["id"] = inboundRequestId,
+                ["method"] = "userInput.request",
+                ["params"] = new Dictionary<string, object?>
+                {
+                    ["sessionId"] = cloudId,
+                    ["question"] = "Color?",
+                    ["choices"] = new object?[] { "red", "blue" },
+                    ["allowFreeform"] = false
+                }
+            });
+
+        await using var client = new CopilotClient(new CopilotClientOptions
+        { Connection = RuntimeConnection.ForUri(server.Url) });
+
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            client.CreateCloudSessionAsync(new SessionConfig
+            {
+                OnPermissionRequest = PermissionHandler.ApproveAll,
+                Cloud = new CloudSessionOptions
+                {
+                    Repository = new CloudSessionRepository { Owner = "github", Name = "copilot-sdk" }
+                }
+            }));
+
+        // The parked request must have been rejected with the guard-drop message (not the overflow message).
+        var responses = await server.WaitForAllInboundResponses(1, TimeSpan.FromSeconds(5));
+
+        Assert.Single(responses);
+        Assert.True(responses[0].IsError);
+        Assert.Contains(
+            "pending session routing ended before session was registered",
+            responses[0].ErrorMessage ?? "");
+    }
+
     // =========================================================================
     // Fake server infrastructure
     // =========================================================================
@@ -280,21 +367,35 @@ public sealed class CloudSessionTests
         private readonly string _cloudSessionId;
         private readonly Dictionary<string, object?>? _earlyNotification;
         private readonly Dictionary<string, object?>? _earlyInboundRequest;
+        private readonly int _earlyInboundRequestCount;
+        private readonly bool _failSessionCreate;
         private readonly TaskCompletionSource<Dictionary<string, object?>?> _userInputResponseTcs =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
+        // Response tracking for overflow / guard-drop tests.
+        private readonly object _inboundResponsesLock = new();
+        private readonly List<InboundResponse> _collectedInboundResponses = [];
+        private int _waitForInboundResponseCount;
+        private TaskCompletionSource<IReadOnlyList<InboundResponse>>? _allInboundResponsesTcs;
+
         public JsonElement? LastCreatePayload { get; private set; }
+
+        public record InboundResponse(int RequestId, bool IsError, string? ErrorMessage);
 
         private FakeCloudServer(
             TcpListener listener,
             string cloudSessionId,
             Dictionary<string, object?>? earlyNotification,
-            Dictionary<string, object?>? earlyInboundRequest)
+            Dictionary<string, object?>? earlyInboundRequest,
+            int earlyInboundRequestCount,
+            bool failSessionCreate)
         {
             _listener = listener;
             _cloudSessionId = cloudSessionId;
             _earlyNotification = earlyNotification;
             _earlyInboundRequest = earlyInboundRequest;
+            _earlyInboundRequestCount = earlyInboundRequestCount;
+            _failSessionCreate = failSessionCreate;
             _serverTask = RunAsync();
         }
 
@@ -310,15 +411,54 @@ public sealed class CloudSessionTests
         public static Task<FakeCloudServer> StartAsync(
             string cloudSessionId = "cloud-session-id",
             Dictionary<string, object?>? earlyNotification = null,
-            Dictionary<string, object?>? earlyInboundRequest = null)
+            Dictionary<string, object?>? earlyInboundRequest = null,
+            int earlyInboundRequestCount = 0,
+            bool failSessionCreate = false)
         {
             var listener = new TcpListener(IPAddress.Loopback, 0);
             listener.Start();
-            return Task.FromResult(new FakeCloudServer(listener, cloudSessionId, earlyNotification, earlyInboundRequest));
+            return Task.FromResult(new FakeCloudServer(
+                listener, cloudSessionId, earlyNotification, earlyInboundRequest,
+                earlyInboundRequestCount, failSessionCreate));
         }
 
         public Task<Dictionary<string, object?>?> WaitForUserInputResponse(TimeSpan timeout)
             => _userInputResponseTcs.Task.WaitAsync(timeout);
+
+        /// <summary>
+        /// Waits until the server has collected <paramref name="count"/> responses (error or success)
+        /// from the client for inbound requests. Used by overflow and guard-drop tests.
+        /// </summary>
+        public Task<IReadOnlyList<InboundResponse>> WaitForAllInboundResponses(int count, TimeSpan timeout)
+        {
+            var tcs = new TaskCompletionSource<IReadOnlyList<InboundResponse>>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            lock (_inboundResponsesLock)
+            {
+                _waitForInboundResponseCount = count;
+                _allInboundResponsesTcs = tcs;
+                if (_collectedInboundResponses.Count >= count)
+                    tcs.TrySetResult(new List<InboundResponse>(_collectedInboundResponses));
+            }
+            return tcs.Task.WaitAsync(timeout);
+        }
+
+        private void RecordInboundResponse(InboundResponse response)
+        {
+            TaskCompletionSource<IReadOnlyList<InboundResponse>>? tcs = null;
+            IReadOnlyList<InboundResponse>? snapshot = null;
+            lock (_inboundResponsesLock)
+            {
+                _collectedInboundResponses.Add(response);
+                if (_allInboundResponsesTcs != null &&
+                    _collectedInboundResponses.Count >= _waitForInboundResponseCount)
+                {
+                    tcs = _allInboundResponsesTcs;
+                    snapshot = new List<InboundResponse>(_collectedInboundResponses);
+                }
+            }
+            tcs?.TrySetResult(snapshot!);
+        }
 
         public async ValueTask DisposeAsync()
         {
@@ -373,6 +513,16 @@ public sealed class CloudSessionTests
                         };
                     }
                     _userInputResponseTcs.TrySetResult(dict);
+
+                    if (idElement.ValueKind == JsonValueKind.Number && idElement.TryGetInt32(out var successId))
+                        RecordInboundResponse(new InboundResponse(successId, IsError: false, null));
+                }
+                else if (request.TryGetProperty("error", out var errorEl))
+                {
+                    var requestId = idElement.ValueKind == JsonValueKind.Number && idElement.TryGetInt32(out var errId)
+                        ? errId : -1;
+                    var msg = errorEl.TryGetProperty("message", out var msgEl) ? msgEl.GetString() : null;
+                    RecordInboundResponse(new InboundResponse(requestId, IsError: true, msg));
                 }
                 return;
             }
@@ -422,6 +572,45 @@ public sealed class CloudSessionTests
                     await WriteMessageAsync(stream, _earlyInboundRequest, cancellationToken);
                     // Give the SDK a moment to park the request before we unblock create.
                     await Task.Delay(50, cancellationToken);
+                }
+
+                // For overflow tests: send N inbound requests to exercise the buffer cap.
+                if (_earlyInboundRequestCount > 0)
+                {
+                    for (var i = 1; i <= _earlyInboundRequestCount; i++)
+                    {
+                        await WriteMessageAsync(stream, new Dictionary<string, object?>
+                        {
+                            ["jsonrpc"] = "2.0",
+                            ["id"] = i,
+                            ["method"] = "userInput.request",
+                            ["params"] = new Dictionary<string, object?>
+                            {
+                                ["sessionId"] = _cloudSessionId,
+                                ["question"] = $"Question {i}",
+                                ["choices"] = new object?[] { "yes", "no" },
+                                ["allowFreeform"] = false
+                            }
+                        }, cancellationToken);
+                    }
+
+                    // Give the client time to park/overflow all requests before responding.
+                    await Task.Delay(100, cancellationToken);
+                }
+
+                if (_failSessionCreate)
+                {
+                    await WriteMessageAsync(stream, new Dictionary<string, object?>
+                    {
+                        ["jsonrpc"] = "2.0",
+                        ["id"] = id,
+                        ["error"] = new Dictionary<string, object?>
+                        {
+                            ["code"] = -32603,
+                            ["message"] = "session.create failed (test-induced failure)"
+                        }
+                    }, cancellationToken);
+                    return;
                 }
 
                 await WriteMessageAsync(stream, new Dictionary<string, object?>
