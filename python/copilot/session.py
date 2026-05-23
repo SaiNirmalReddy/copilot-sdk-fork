@@ -1001,6 +1001,7 @@ class CopilotSession:
         self.session_id = session_id
         self._client = client
         self._workspace_path = os.fsdecode(workspace_path) if workspace_path is not None else None
+        self._remote_url: str | None = None
         self._event_handlers: set[Callable[[SessionEvent], None]] = set()
         self._event_handlers_lock = threading.Lock()
         self._tool_handlers: dict[str, ToolHandler] = {}
@@ -1068,6 +1069,16 @@ class CopilotSession:
         # the attribute handle the None case appropriately, use a setter for the
         # attribute to do the conversion, or just do the conversion lazily via a getter.
         return pathlib.Path(self._workspace_path) if self._workspace_path else None
+
+    @property
+    def remote_url(self) -> str | None:
+        """Remote URL for the Mission Control–backed cloud session.
+
+        Set from the ``remoteUrl`` field in the ``session.create`` response for
+        cloud sessions created via :meth:`CopilotClient.create_cloud_session`.
+        ``None`` for regular local sessions.
+        """
+        return self._remote_url
 
     async def send(
         self,

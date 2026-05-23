@@ -63,7 +63,7 @@ class TestPermissionHandlerOptional:
 
 class TestCreateSessionConfig:
     @pytest.mark.asyncio
-    async def test_create_session_forwards_cloud_options(self):
+    async def test_create_cloud_session_forwards_cloud_options(self):
         client = CopilotClient(connection=RuntimeConnection.for_stdio(path=CLI_PATH))
         await client.start()
         try:
@@ -72,12 +72,11 @@ class TestCreateSessionConfig:
             async def mock_request(method, params):
                 captured[method] = params
                 if method == "session.create":
-                    return {"sessionId": params["sessionId"], "workspacePath": None}
+                    return {"sessionId": "cloud-session-id", "workspacePath": None}
                 return {}
 
             client._client.request = mock_request
-            await client.create_session(
-                on_permission_request=PermissionHandler.approve_all,
+            await client.create_cloud_session(
                 cloud=CloudSessionOptions(
                     repository=CloudSessionRepository(
                         owner="github",
@@ -87,6 +86,9 @@ class TestCreateSessionConfig:
                 ),
             )
 
+            assert "sessionId" not in captured["session.create"], (
+                "cloud sessions must not send a sessionId in the wire payload"
+            )
             assert captured["session.create"]["cloud"] == {
                 "repository": {
                     "owner": "github",
