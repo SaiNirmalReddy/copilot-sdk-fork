@@ -203,7 +203,7 @@ internal static class CanvasErrorHelpers
         "canvas_handler_error",
         message);
 
-    public static LocalRpcInvocationException ToRpcException(CanvasError error) => Build(error.Code, error.Message);
+    public static LocalRpcInvocationException ToRpcException(CanvasError error) => Build(error.Code, $"{error.Code}: {error.Message}");
 
     private static LocalRpcInvocationException Build(string code, string message)
     {
