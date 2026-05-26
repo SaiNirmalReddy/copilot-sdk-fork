@@ -721,6 +721,10 @@ public sealed class SessionMetadata
     [JsonPropertyName("mcTaskId")]
     public string? McTaskId { get; set; }
 
+    /// <summary>Identifier of the client driving the session.</summary>
+    [JsonPropertyName("clientName")]
+    public string? ClientName { get; set; }
+
     /// <summary>Last-modified time of the session's persisted state, as ISO 8601.</summary>
     [JsonPropertyName("modifiedTime")]
     public string ModifiedTime { get; set; } = string.Empty;

@@ -6432,6 +6432,10 @@ export interface SessionMetadata {
    */
   summary?: string;
   /**
+   * Identifier of the client driving the session.
+   */
+  clientName?: string;
+  /**
    * Optional human-friendly name set via /rename
    */
   name?: string;

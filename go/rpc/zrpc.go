@@ -4222,6 +4222,8 @@ type SessionMetadata struct {
 	// GitHub task ID, when this local session is bound to one. Only present for local sessions
 	// exported to remote control.
 	McTaskID *string `json:"mcTaskId,omitempty"`
+	// Identifier of the client driving the session.
+	ClientName *string `json:"clientName,omitempty"`
 	// Last-modified time of the session's persisted state, as ISO 8601
 	ModifiedTime string `json:"modifiedTime"`
 	// Optional human-friendly name set via /rename

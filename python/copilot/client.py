@@ -784,6 +784,7 @@ class SessionMetadata:
     modified_time: datetime  # Timestamp when session was last modified
     is_remote: bool  # Whether the session is remote
     summary: str | None = None  # Optional summary of the session
+    client_name: str | None = None  # Identifier of the client driving the session
     context: SessionContext | None = None  # Working directory context
 
     @staticmethod
@@ -799,6 +800,7 @@ class SessionMetadata:
                 f"startTime={start_time}, modifiedTime={modified_time}, isRemote={is_remote}"
             )
         summary = obj.get("summary")
+        client_name = obj.get("clientName")
         context_dict = obj.get("context")
         context = SessionContext.from_dict(context_dict) if context_dict else None
         return SessionMetadata(
@@ -807,6 +809,7 @@ class SessionMetadata:
             modified_time=_parse_session_timestamp(modified_time),
             is_remote=bool(is_remote),
             summary=summary,
+            client_name=str(client_name) if client_name is not None else None,
             context=context,
         )
 
@@ -818,6 +821,8 @@ class SessionMetadata:
         result["isRemote"] = self.is_remote
         if self.summary is not None:
             result["summary"] = self.summary
+        if self.client_name is not None:
+            result["clientName"] = self.client_name
         if self.context is not None:
             result["context"] = self.context.to_dict()
         return result

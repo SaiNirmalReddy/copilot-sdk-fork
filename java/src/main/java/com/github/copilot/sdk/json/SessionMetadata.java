@@ -46,6 +46,9 @@ public class SessionMetadata {
     @JsonProperty("summary")
     private String summary;
 
+    @JsonProperty("clientName")
+    private String clientName;
+
     @JsonProperty("isRemote")
     private boolean isRemote;
 
@@ -128,6 +131,25 @@ public class SessionMetadata {
      */
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    /**
+     * Gets the identifier of the client driving the session.
+     *
+     * @return the client name, or {@code null} if not available
+     */
+    public String getClientName() {
+        return clientName;
+    }
+
+    /**
+     * Sets the client identifier for the session.
+     *
+     * @param clientName
+     *            the client name
+     */
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
     }
 
     /**

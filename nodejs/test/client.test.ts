@@ -278,6 +278,80 @@ describe("CopilotClient", () => {
         spy.mockRestore();
     });
 
+    it("maps clientName from session.list responses", async () => {
+        const client = new CopilotClient();
+        await client.start();
+        onTestFinished(() => client.forceStop());
+
+        vi.spyOn((client as any).connection!, "sendRequest").mockImplementation(
+            async (method: string) => {
+                if (method === "session.list") {
+                    return {
+                        sessions: [
+                            {
+                                sessionId: "session-1",
+                                startTime: "2025-01-01T00:00:00Z",
+                                modifiedTime: "2025-01-01T01:00:00Z",
+                                summary: "test session",
+                                clientName: "my-app",
+                                isRemote: false,
+                            },
+                        ],
+                    };
+                }
+                throw new Error(`Unexpected method: ${method}`);
+            }
+        );
+
+        const sessions = await client.listSessions();
+
+        expect(sessions).toEqual([
+            expect.objectContaining({
+                sessionId: "session-1",
+                clientName: "my-app",
+                summary: "test session",
+            }),
+        ]);
+        expect(sessions[0].startTime).toBeInstanceOf(Date);
+        expect(sessions[0].modifiedTime).toBeInstanceOf(Date);
+    });
+
+    it("maps clientName from session.getMetadata responses", async () => {
+        const client = new CopilotClient();
+        await client.start();
+        onTestFinished(() => client.forceStop());
+
+        vi.spyOn((client as any).connection!, "sendRequest").mockImplementation(
+            async (method: string) => {
+                if (method === "session.getMetadata") {
+                    return {
+                        session: {
+                            sessionId: "session-1",
+                            startTime: "2025-01-01T00:00:00Z",
+                            modifiedTime: "2025-01-01T01:00:00Z",
+                            summary: "loaded session",
+                            clientName: "my-app",
+                            isRemote: false,
+                        },
+                    };
+                }
+                throw new Error(`Unexpected method: ${method}`);
+            }
+        );
+
+        const metadata = await client.getSessionMetadata("session-1");
+
+        expect(metadata).toEqual(
+            expect.objectContaining({
+                sessionId: "session-1",
+                clientName: "my-app",
+                summary: "loaded session",
+            })
+        );
+        expect(metadata?.startTime).toBeInstanceOf(Date);
+        expect(metadata?.modifiedTime).toBeInstanceOf(Date);
+    });
+
     it("forwards enableSessionTelemetry in session.create request", async () => {
         const client = new CopilotClient();
         await client.start();

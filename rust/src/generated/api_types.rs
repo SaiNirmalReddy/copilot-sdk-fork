@@ -5863,6 +5863,9 @@ pub struct SessionMetadata {
     /// GitHub task ID, when this local session is bound to one. Only present for local sessions exported to remote control.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mc_task_id: Option<String>,
+    /// Identifier of the client driving the session.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_name: Option<String>,
     /// Last-modified time of the session's persisted state, as ISO 8601
     pub modified_time: String,
     /// Optional human-friendly name set via /rename

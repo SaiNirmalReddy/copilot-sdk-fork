@@ -594,6 +594,7 @@ async fn list_sessions_returns_typed_metadata() {
                 "startTime": "2025-01-01T00:00:00Z",
                 "modifiedTime": "2025-01-01T01:00:00Z",
                 "summary": "test session",
+                "clientName": "my-app",
                 "isRemote": false,
             }]
         },
@@ -604,6 +605,7 @@ async fn list_sessions_returns_typed_metadata() {
     assert_eq!(sessions.len(), 1);
     assert_eq!(sessions[0].session_id, "s1");
     assert_eq!(sessions[0].summary, Some("test session".to_string()));
+    assert_eq!(sessions[0].client_name.as_deref(), Some("my-app"));
 }
 
 #[tokio::test]
@@ -1097,6 +1099,7 @@ async fn get_session_metadata_returns_typed_metadata() {
                 "startTime": "2025-01-01T00:00:00Z",
                 "modifiedTime": "2025-01-01T01:00:00Z",
                 "summary": "loaded session",
+                "clientName": "my-app",
                 "isRemote": false,
             }
         },
@@ -1107,6 +1110,7 @@ async fn get_session_metadata_returns_typed_metadata() {
     let metadata = metadata.expect("server returned a session");
     assert_eq!(metadata.session_id, "s1");
     assert_eq!(metadata.summary.as_deref(), Some("loaded session"));
+    assert_eq!(metadata.client_name.as_deref(), Some("my-app"));
 }
 
 #[tokio::test]

@@ -3331,6 +3331,9 @@ pub struct SessionMetadata {
     /// Agent-generated session summary.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub summary: Option<String>,
+    /// Identifier of the client driving the session.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client_name: Option<String>,
     /// Whether the session is running remotely.
     pub is_remote: bool,
 }

@@ -1347,6 +1347,7 @@ export class CopilotClient {
                 startTime: string;
                 modifiedTime: string;
                 summary?: string;
+                clientName?: string;
                 isRemote: boolean;
                 context?: { cwd: string; gitRoot?: string; repository?: string; branch?: string };
             }>;
@@ -1402,6 +1403,7 @@ export class CopilotClient {
         startTime: string;
         modifiedTime: string;
         summary?: string;
+        clientName?: string;
         isRemote: boolean;
         context?: { cwd: string; gitRoot?: string; repository?: string; branch?: string };
     }): SessionMetadata {
@@ -1411,6 +1413,7 @@ export class CopilotClient {
             startTime: new Date(raw.startTime),
             modifiedTime: new Date(raw.modifiedTime),
             summary: raw.summary,
+            clientName: raw.clientName,
             isRemote: raw.isRemote,
             context: context
                 ? {

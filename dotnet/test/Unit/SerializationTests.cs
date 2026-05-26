@@ -172,6 +172,30 @@ public class SerializationTests
     }
 
     [Fact]
+    public void SessionMetadata_CanRoundTripClientName_WithSdkOptions()
+    {
+        var options = GetSerializerOptions();
+        var original = new SessionMetadata
+        {
+            SessionId = "session-1",
+            StartTime = DateTimeOffset.Parse("2025-01-01T00:00:00Z"),
+            ModifiedTime = DateTimeOffset.Parse("2025-01-01T01:00:00Z"),
+            Summary = "loaded session",
+            ClientName = "my-app",
+            IsRemote = false
+        };
+
+        var json = JsonSerializer.Serialize(original, options);
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        Assert.Equal("my-app", root.GetProperty("clientName").GetString());
+
+        var deserialized = JsonSerializer.Deserialize<SessionMetadata>(json, options);
+        Assert.NotNull(deserialized);
+        Assert.Equal("my-app", deserialized.ClientName);
+    }
+
+    [Fact]
     public void CreateSessionRequest_CanSerializeEnableSessionTelemetry_WithSdkOptions()
     {
         var options = GetSerializerOptions();

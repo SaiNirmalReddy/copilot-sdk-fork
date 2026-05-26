@@ -1970,6 +1970,8 @@ export interface SessionMetadata {
     startTime: Date;
     modifiedTime: Date;
     summary?: string;
+    /** Identifier of the client driving the session */
+    clientName?: string;
     isRemote: boolean;
     /** Working directory context (working directory, git info) from session creation */
     context?: SessionContext;

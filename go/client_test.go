@@ -402,6 +402,33 @@ func TestResumeSessionRequest_ClientName(t *testing.T) {
 	})
 }
 
+func TestSessionMetadata_ClientName(t *testing.T) {
+	t.Run("round-trips clientName in JSON", func(t *testing.T) {
+		var metadata SessionMetadata
+		if err := json.Unmarshal([]byte(`{
+			"sessionId":"s1",
+			"startTime":"2025-01-01T00:00:00Z",
+			"modifiedTime":"2025-01-01T01:00:00Z",
+			"summary":"loaded session",
+			"clientName":"my-app",
+			"isRemote":false
+		}`), &metadata); err != nil {
+			t.Fatalf("Failed to unmarshal: %v", err)
+		}
+		if metadata.ClientName == nil || *metadata.ClientName != "my-app" {
+			t.Fatalf("Expected clientName to be my-app, got %v", metadata.ClientName)
+		}
+
+		data, err := json.Marshal(metadata)
+		if err != nil {
+			t.Fatalf("Failed to marshal: %v", err)
+		}
+		if !strings.Contains(string(data), `"clientName":"my-app"`) {
+			t.Fatalf("Expected marshaled JSON to include clientName, got %s", string(data))
+		}
+	})
+}
+
 func TestCreateSessionRequest_Agent(t *testing.T) {
 	t.Run("includes agent in JSON when set", func(t *testing.T) {
 		req := createSessionRequest{Agent: "test-agent"}

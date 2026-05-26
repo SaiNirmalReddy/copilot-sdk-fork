@@ -12068,6 +12068,9 @@ class SessionMetadata:
     """GitHub task ID, when this local session is bound to one. Only present for local sessions
     exported to remote control.
     """
+    client_name: str | None = None
+    """Identifier of the client driving the session."""
+
     name: str | None = None
     """Optional human-friendly name set via /rename"""
 
@@ -12083,9 +12086,10 @@ class SessionMetadata:
         start_time = from_str(obj.get("startTime"))
         context = from_union([SessionContext.from_dict, from_none], obj.get("context"))
         mc_task_id = from_union([from_str, from_none], obj.get("mcTaskId"))
+        client_name = from_union([from_str, from_none], obj.get("clientName"))
         name = from_union([from_str, from_none], obj.get("name"))
         summary = from_union([from_str, from_none], obj.get("summary"))
-        return SessionMetadata(is_remote, modified_time, session_id, start_time, context, mc_task_id, name, summary)
+        return SessionMetadata(is_remote, modified_time, session_id, start_time, context, mc_task_id, client_name, name, summary)
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -12097,6 +12101,8 @@ class SessionMetadata:
             result["context"] = from_union([lambda x: to_class(SessionContext, x), from_none], self.context)
         if self.mc_task_id is not None:
             result["mcTaskId"] = from_union([from_str, from_none], self.mc_task_id)
+        if self.client_name is not None:
+            result["clientName"] = from_union([from_str, from_none], self.client_name)
         if self.name is not None:
             result["name"] = from_union([from_str, from_none], self.name)
         if self.summary is not None:

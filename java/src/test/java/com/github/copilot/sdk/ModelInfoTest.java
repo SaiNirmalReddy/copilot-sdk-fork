@@ -60,8 +60,11 @@ class ModelInfoTest {
         assertNull(meta.getStartTime());
         assertNull(meta.getModifiedTime());
         assertNull(meta.getSummary());
+        assertNull(meta.getClientName());
         assertFalse(meta.isRemote());
 
+        meta.setClientName("my-app");
+        assertEquals("my-app", meta.getClientName());
         meta.setRemote(true);
         assertTrue(meta.isRemote());
     }

@@ -1360,6 +1360,7 @@ type SessionMetadata struct {
 	StartTime    time.Time       `json:"startTime"`
 	ModifiedTime time.Time       `json:"modifiedTime"`
 	Summary      *string         `json:"summary,omitempty"`
+	ClientName   *string         `json:"clientName,omitempty"`
 	IsRemote     bool            `json:"isRemote"`
 	Context      *SessionContext `json:"context,omitempty"`
 }

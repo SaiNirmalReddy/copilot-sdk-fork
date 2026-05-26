@@ -2667,6 +2667,10 @@ public sealed class SessionMetadata
     /// </summary>
     public string? Summary { get; set; }
     /// <summary>
+    /// Identifier of the client driving the session.
+    /// </summary>
+    public string? ClientName { get; set; }
+    /// <summary>
     /// Whether the session is running on a remote server.
     /// </summary>
     public bool IsRemote { get; set; }

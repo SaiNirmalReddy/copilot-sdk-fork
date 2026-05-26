@@ -21,6 +21,7 @@ from copilot.client import (
     ModelInfo,
     ModelLimits,
     ModelSupports,
+    SessionMetadata,
 )
 from copilot.session import PermissionHandler
 from e2e.testharness import CLI_PATH
@@ -600,6 +601,23 @@ class TestSessionConfigForwarding:
             assert captured["session.resume"]["enableSessionTelemetry"] is False
         finally:
             await client.force_stop()
+
+
+class TestSessionMetadataParsing:
+    def test_session_metadata_round_trips_client_name(self):
+        metadata = SessionMetadata.from_dict(
+            {
+                "sessionId": "session-1",
+                "startTime": "2025-01-01T00:00:00Z",
+                "modifiedTime": "2025-01-01T01:00:00Z",
+                "summary": "loaded session",
+                "clientName": "my-app",
+                "isRemote": False,
+            }
+        )
+
+        assert metadata.client_name == "my-app"
+        assert metadata.to_dict()["clientName"] == "my-app"
 
     @pytest.mark.asyncio
     async def test_create_session_forwards_provider_headers(self):
