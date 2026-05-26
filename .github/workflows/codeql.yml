@@ -50,6 +50,8 @@ jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     needs: changes
+    # Run even if 'changes' is skipped (e.g. on push/schedule where paths-filter
+    # may not flag changes). Each step has its own gate condition.
     if: always()
     runs-on: ubuntu-latest
     permissions:
