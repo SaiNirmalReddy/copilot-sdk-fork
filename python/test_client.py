@@ -959,7 +959,7 @@ class TestSessionConfigForwarding:
 class TestMcpOAuthTokenStorage:
     @pytest.mark.asyncio
     async def test_create_session_defaults_mcp_oauth_token_storage_to_in_memory(self):
-        client = CopilotClient(SubprocessConfig(cli_path=CLI_PATH))
+        client = CopilotClient(connection=RuntimeConnection.for_stdio(path=CLI_PATH))
         await client.start()
 
         try:
@@ -980,7 +980,7 @@ class TestMcpOAuthTokenStorage:
 
     @pytest.mark.asyncio
     async def test_create_session_forwards_explicit_mcp_oauth_token_storage(self):
-        client = CopilotClient(SubprocessConfig(cli_path=CLI_PATH))
+        client = CopilotClient(connection=RuntimeConnection.for_stdio(path=CLI_PATH))
         await client.start()
 
         try:
@@ -1002,7 +1002,7 @@ class TestMcpOAuthTokenStorage:
 
     @pytest.mark.asyncio
     async def test_resume_session_defaults_mcp_oauth_token_storage_to_in_memory(self):
-        client = CopilotClient(SubprocessConfig(cli_path=CLI_PATH))
+        client = CopilotClient(connection=RuntimeConnection.for_stdio(path=CLI_PATH))
         await client.start()
 
         try:
@@ -1030,7 +1030,7 @@ class TestMcpOAuthTokenStorage:
 
     @pytest.mark.asyncio
     async def test_resume_session_forwards_explicit_mcp_oauth_token_storage(self):
-        client = CopilotClient(SubprocessConfig(cli_path=CLI_PATH))
+        client = CopilotClient(connection=RuntimeConnection.for_stdio(path=CLI_PATH))
         await client.start()
 
         try:
