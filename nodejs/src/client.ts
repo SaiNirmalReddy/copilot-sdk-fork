@@ -89,12 +89,13 @@ const MIN_PROTOCOL_VERSION = 3;
  */
 function warnIfMcpAppsDropped(
     requested: boolean | undefined,
-    capabilities: { ui?: { mcpApps?: boolean } } | undefined
+    capabilities: { ui?: { mcpApps?: boolean } } | undefined,
+    sessionId: string
 ): void {
     if (requested && !capabilities?.ui?.mcpApps) {
         process.emitWarning(
-            "enableMcpApps was requested but the runtime did not advertise capabilities.ui.mcpApps. The runtime's MCP_APPS feature flag or COPILOT_MCP_APPS=true environment override is likely unset; the MCP Apps surface is unavailable for this session.",
-            "McpAppsCapabilityDroppedWarning"
+            `enableMcpApps was requested but the runtime did not advertise capabilities.ui.mcpApps (sessionId: ${sessionId}). The runtime's MCP_APPS feature flag or COPILOT_MCP_APPS=true environment override is likely unset; the MCP Apps surface is unavailable for this session.`,
+            { type: "McpAppsCapabilityDroppedWarning", code: "MCPAPPS_CAPABILITY_DROPPED" }
         );
     }
 }
@@ -924,7 +925,7 @@ export class CopilotClient {
             };
             session["_workspacePath"] = workspacePath;
             session.setCapabilities(capabilities);
-            warnIfMcpAppsDropped(config.enableMcpApps, capabilities);
+            warnIfMcpAppsDropped(config.enableMcpApps, capabilities, sessionId);
         } catch (e) {
             this.sessions.delete(sessionId);
             throw e;
@@ -1070,7 +1071,7 @@ export class CopilotClient {
             session["_workspacePath"] = workspacePath;
             session.setCapabilities(capabilities);
             session.setOpenCanvases(openCanvases ?? []);
-            warnIfMcpAppsDropped(config.enableMcpApps, capabilities);
+            warnIfMcpAppsDropped(config.enableMcpApps, capabilities, sessionId);
         } catch (e) {
             this.sessions.delete(sessionId);
             throw e;
