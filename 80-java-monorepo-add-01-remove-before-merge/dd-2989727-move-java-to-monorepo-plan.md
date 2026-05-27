@@ -163,17 +163,17 @@ The software that currently resides in https://github.com/github/copilot-sdk-jav
 7. ⌛ Add Java to `docs/` getting-started and feature pages. See https://github.com/github/copilot-sdk-partners/issues/94
 8. ✅ Update `sdk-protocol-version.json` if Java needs it.
 
-### Phase 06: Cutover and Cleanup
+### ⌛Phase 06: Cutover and Cleanup
 
-1. **Disable CI** in `copilot-sdk-java` (remove or disable workflows).
-2. **Archive** `copilot-sdk-java` repo (make read-only).
-3. **Update external references**:
+1. ⌛ **Disable CI** in `copilot-sdk-java` (remove or disable workflows).
+2. ⌛ **Archive** `copilot-sdk-java` repo (make read-only).
+3. ✅ **Update external references**:
    - ✅ Maven Central POM `<scm>` URLs
    - ✅ README badges pointing to the new repo
    - ✅ Javadoc.io configuration
    - Any links in copilot documentation
 4. **Remove duplicate resources** that were merged rather than moved.
-5. **Run full CI** in monorepo to validate everything.
+5. ⌛ **Run full CI** in monorepo to validate everything.
 
 ### Phase 07: Preserve authorship of commits for `pom.xml` and `.java` files
 
