@@ -423,6 +423,7 @@ async fn should_enrich_basic_session_metadata() {
                     .expect("create session");
                 let session_id = session.id().clone();
                 let metadata = SessionMetadata {
+                    client_name: None,
                     context: Some(SessionContext {
                         branch: None,
                         cwd: ctx.work_dir().display().to_string(),
