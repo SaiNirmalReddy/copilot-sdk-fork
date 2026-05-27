@@ -1321,6 +1321,68 @@ public sealed class PostToolUseHookOutput
 }
 
 /// <summary>
+/// Input for a post-tool-use-failure hook.
+///
+/// Fires after a tool execution whose result was "failure". The CLI extracts
+/// the failure message from the tool result and passes it as the
+/// <see cref="Error"/> field (rather than passing the full result object).
+/// </summary>
+public sealed class PostToolUseFailureHookInput
+{
+    /// <summary>
+    /// The runtime session ID of the session that triggered the hook.
+    /// </summary>
+    [JsonPropertyName("sessionId")]
+    public string SessionId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Unix timestamp in milliseconds when the tool execution completed.
+    /// </summary>
+    [JsonPropertyName("timestamp")]
+    [JsonConverter(typeof(UnixMillisecondsDateTimeOffsetConverter))]
+    public DateTimeOffset Timestamp { get; set; }
+
+    /// <summary>
+    /// Current working directory of the session.
+    /// </summary>
+    [JsonPropertyName("cwd")]
+    public string WorkingDirectory { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Name of the tool that failed.
+    /// </summary>
+    [JsonPropertyName("toolName")]
+    public string ToolName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Arguments that were passed to the tool.
+    /// </summary>
+    [JsonPropertyName("toolArgs")]
+    public JsonElement? ToolArgs { get; set; }
+
+    /// <summary>
+    /// Failure message extracted from the tool's result.
+    /// </summary>
+    [JsonPropertyName("error")]
+    public string Error { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Output for a post-tool-use-failure hook.
+///
+/// Only <see cref="AdditionalContext"/> is consumed by the host CLI — it is
+/// appended as hidden guidance to the model alongside the failed tool result.
+/// </summary>
+public sealed class PostToolUseFailureHookOutput
+{
+    /// <summary>
+    /// Additional context to inject into the conversation for the language model.
+    /// </summary>
+    [JsonPropertyName("additionalContext")]
+    public string? AdditionalContext { get; set; }
+}
+
+/// <summary>
 /// Input for a user-prompt-submitted hook.
 /// </summary>
 public sealed class UserPromptSubmittedHookInput
@@ -1612,6 +1674,13 @@ public sealed class SessionHooks
     /// Handler called after a tool has been executed.
     /// </summary>
     public Func<PostToolUseHookInput, HookInvocation, Task<PostToolUseHookOutput?>>? OnPostToolUse { get; set; }
+
+    /// <summary>
+    /// Handler called after a tool execution whose result was a failure.
+    /// <see cref="OnPostToolUse"/> only fires for successful tool executions;
+    /// register this handler in addition to observe failed tool calls.
+    /// </summary>
+    public Func<PostToolUseFailureHookInput, HookInvocation, Task<PostToolUseFailureHookOutput?>>? OnPostToolUseFailure { get; set; }
 
     /// <summary>
     /// Handler called when the user submits a prompt.
@@ -2475,7 +2544,7 @@ public abstract class SessionConfigBase
 
     /// <summary>
     /// Provider-side canvas lifecycle handler. The SDK routes inbound
-    /// <c>canvas.open</c> / <c>canvas.close</c> / <c>canvas.action.invoke</c>
+    /// <c>canvas.open</c> / <c>canvas.close</c> / <c>canvas.invokeAction</c>
     /// requests to this handler.
     /// </summary>
     [Experimental(Diagnostics.Experimental)]
@@ -3124,9 +3193,8 @@ public sealed class SystemMessageTransformRpcResponse
 [JsonSerializable(typeof(string[]))]
 #pragma warning disable GHCP001
 [JsonSerializable(typeof(CanvasDeclaration))]
-[JsonSerializable(typeof(CanvasOpenResponse))]
+[JsonSerializable(typeof(CanvasProviderOpenResult))]
 [JsonSerializable(typeof(CanvasHostContext))]
-[JsonSerializable(typeof(CanvasHostCapabilities))]
 [JsonSerializable(typeof(ExtensionInfo))]
 #pragma warning restore GHCP001
 internal partial class TypesJsonContext : JsonSerializerContext;

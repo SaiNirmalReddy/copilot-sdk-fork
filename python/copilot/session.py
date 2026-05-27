@@ -25,8 +25,15 @@ from typing import TYPE_CHECKING, Any, Literal, NotRequired, Required, TypedDict
 from ._diagnostics import log_timing
 from ._jsonrpc import JsonRpcError, ProcessExitedError
 from ._telemetry import get_trace_context, trace_context
-from .canvas import CanvasHandler, OpenCanvasInstance
+from .canvas import CanvasError, CanvasHandler, OpenCanvasInstance
 from .generated.rpc import (
+    CanvasHandler as RpcCanvasHandler,
+)
+from .generated.rpc import (
+    CanvasProviderCloseRequest,
+    CanvasProviderInvokeActionRequest,
+    CanvasProviderOpenRequest,
+    CanvasProviderOpenResult,
     ClientSessionApiHandlers,
     CommandsHandlePendingCommandRequest,
     ExternalToolTextResultForLlm,
@@ -720,6 +727,38 @@ PostToolUseHandler = Callable[
 ]
 
 
+class PostToolUseFailureHookInput(TypedDict):
+    """Input for post-tool-use-failure hook.
+
+    Fires after a tool execution whose result was ``"failure"``. The CLI
+    extracts the failure message from the tool result and passes it as the
+    ``error`` field (rather than passing the full result object).
+    """
+
+    sessionId: str
+    timestamp: datetime
+    workingDirectory: str
+    toolName: str
+    toolArgs: Any
+    error: str
+
+
+class PostToolUseFailureHookOutput(TypedDict, total=False):
+    """Output for post-tool-use-failure hook.
+
+    Only ``additionalContext`` is consumed by the host CLI — it is appended
+    as hidden guidance to the model alongside the failed tool result.
+    """
+
+    additionalContext: str
+
+
+PostToolUseFailureHandler = Callable[
+    [PostToolUseFailureHookInput, dict[str, str]],
+    PostToolUseFailureHookOutput | None | Awaitable[PostToolUseFailureHookOutput | None],
+]
+
+
 class UserPromptSubmittedHookInput(TypedDict):
     """Input for user-prompt-submitted hook"""
 
@@ -823,6 +862,7 @@ class SessionHooks(TypedDict, total=False):
     on_pre_tool_use: PreToolUseHandler
     on_pre_mcp_tool_call: PreMcpToolCallHandler
     on_post_tool_use: PostToolUseHandler
+    on_post_tool_use_failure: PostToolUseFailureHandler
     on_user_prompt_submitted: UserPromptSubmittedHandler
     on_session_start: SessionStartHandler
     on_session_end: SessionEndHandler
@@ -959,6 +999,43 @@ class ProviderConfig(TypedDict, total=False):
 
 
 SessionEventHandler = Callable[[SessionEvent], None]
+
+
+class _CanvasHandlerAdapter:
+    def __init__(self, handler: CanvasHandler) -> None:
+        self._handler = handler
+
+    async def open(self, params: CanvasProviderOpenRequest) -> CanvasProviderOpenResult:
+        try:
+            return await self._handler.on_open(params)
+        except CanvasError as err:
+            raise JsonRpcError(-32603, err.message, data=err.to_envelope()) from err
+        except Exception as err:
+            raise _canvas_handler_error(err) from err
+
+    async def close(self, params: CanvasProviderCloseRequest) -> None:
+        try:
+            await self._handler.on_close(params)
+        except CanvasError as err:
+            raise JsonRpcError(-32603, err.message, data=err.to_envelope()) from err
+        except Exception as err:
+            raise _canvas_handler_error(err) from err
+
+    async def invoke_action(self, params: CanvasProviderInvokeActionRequest) -> Any:
+        try:
+            return await self._handler.on_action(params)
+        except CanvasError as err:
+            raise JsonRpcError(-32603, err.message, data=err.to_envelope()) from err
+        except Exception as err:
+            raise _canvas_handler_error(err) from err
+
+
+def _canvas_handler_error(err: Exception) -> JsonRpcError:
+    return JsonRpcError(
+        -32603,
+        str(err),
+        data={"code": "canvas_handler_error", "message": str(err)},
+    )
 
 
 class CopilotSession:
@@ -1754,6 +1831,11 @@ class CopilotSession:
         """Register the canvas handler for this session."""
         with self._canvas_handler_lock:
             self._canvas_handler = handler
+            self._client_session_apis.canvas = (
+                cast(RpcCanvasHandler, _CanvasHandlerAdapter(handler))
+                if handler is not None
+                else None
+            )
 
     def _get_canvas_handler(self) -> CanvasHandler | None:
         with self._canvas_handler_lock:
@@ -2077,6 +2159,7 @@ class CopilotSession:
             "preToolUse": hooks.get("on_pre_tool_use"),
             "preMcpToolCall": hooks.get("on_pre_mcp_tool_call"),
             "postToolUse": hooks.get("on_post_tool_use"),
+            "postToolUseFailure": hooks.get("on_post_tool_use_failure"),
             "userPromptSubmitted": hooks.get("on_user_prompt_submitted"),
             "sessionStart": hooks.get("on_session_start"),
             "sessionEnd": hooks.get("on_session_end"),
