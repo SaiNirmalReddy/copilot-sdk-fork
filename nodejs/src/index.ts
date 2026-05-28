@@ -13,12 +13,6 @@ export { RuntimeConnection } from "./types.js";
 export { BuiltInTools, ToolSet } from "./toolSet.js";
 export { CopilotSession, type AssistantMessageEvent } from "./session.js";
 export {
-    buildMcpAppsAllowAttribute,
-    buildMcpAppsCspHeader,
-    type McpAppsCspInput,
-    type McpAppsPermissionsInput,
-} from "./mcpAppsSandbox.js";
-export {
     Canvas,
     CanvasError,
     createCanvas,
