@@ -2012,7 +2012,7 @@ class CopilotClient:
             session._workspace_path = response.get("workspacePath")
             capabilities = response.get("capabilities")
             session._set_capabilities(capabilities)
-            _warn_if_mcp_apps_dropped(enable_mcp_apps, capabilities, actual_session_id)
+            _warn_if_mcp_apps_dropped(enable_mcp_apps, capabilities, registered_session_id)
         except BaseException as exc:
             if registered_session_id is not None:
                 with self._sessions_lock:

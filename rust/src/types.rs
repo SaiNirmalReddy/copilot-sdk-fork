@@ -3959,7 +3959,7 @@ mod tests {
         assert!(cfg.enable_mcp_apps);
 
         let (wire, _runtime) = cfg
-            .into_wire(SessionId::from("enable-mcp-apps"))
+            .into_wire(Some(SessionId::from("enable-mcp-apps")))
             .expect("enable_mcp_apps config has no duplicate handlers");
         assert!(wire.request_mcp_apps);
 
