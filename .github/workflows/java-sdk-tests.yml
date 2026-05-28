@@ -28,6 +28,12 @@ on:
       - "!**/*.gif"
       - "!**/*.svg"
   workflow_dispatch:
+    inputs:
+      test-jdk17:
+        description: "Also run tests on JDK 17 (compatibility check)"
+        type: boolean
+        required: false
+        default: false
   merge_group:
 
 permissions:
@@ -52,7 +58,7 @@ jobs:
 
       - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
         with:
-          java-version: "17"
+          java-version: "25"
           distribution: "microsoft"
           cache: "maven"
 
@@ -126,3 +132,21 @@ jobs:
             java/target/surefire-reports/
             java/target/surefire-reports-isolated/
           retention-days: 7
+
+      - name: Switch to JDK 17
+        if: inputs.test-jdk17 == true
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+        with:
+          java-version: "17"
+          distribution: "microsoft"
+
+      - name: Re-run tests on JDK 17 (no recompilation)
+        if: inputs.test-jdk17 == true
+        env:
+          CI: "true"
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          COPILOT_CLI_PATH: ${{ steps.setup-copilot.outputs.cli-path }}
+        run: |
+          echo "Running tests against JDK 25-built classes using JDK 17 runtime..."
+          java -version
+          mvn surefire:test -Denforcer.skip=true

@@ -1,0 +1,1208 @@
+-*- mode: compilation; default-directory: "~/workareas/copilot-sdk/java/" -*-
+Compilation started at Wed May 27 21:55:34
+
+mvn clean verify
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper (file:/usr/share/maven/lib/guava.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[INFO] Scanning for projects...
+[INFO] Inspecting build with total of 1 modules
+[INFO] Installing Central Publishing features
+[INFO] 
+[INFO] --------------------< com.github:copilot-sdk-java >---------------------
+[INFO] Building GitHub Copilot SDK :: Java 1.0.0-beta-java.5-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ copilot-sdk-java ---
+[INFO] Deleting /home/edburns/workareas/copilot-sdk/java/target
+[INFO] 
+[INFO] --- maven-checkstyle-plugin:3.6.0:check (validate) @ copilot-sdk-java ---
+[INFO] Starting audit...
+Audit done.
+[INFO] You have 0 Checkstyle violations.
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.5.0:enforce (enforce-jdk25) @ copilot-sdk-java ---
+Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.0/plexus-xml-3.0.0.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.0/plexus-xml-3.0.0.pom (3.7 kB at 3.9 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/enforcer/enforcer-api/3.5.0/enforcer-api-3.5.0.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/enforcer/enforcer-api/3.5.0/enforcer-api-3.5.0.pom (3.8 kB at 34 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/enforcer/enforcer-rules/3.5.0/enforcer-rules-3.5.0.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/enforcer/enforcer-rules/3.5.0/enforcer-rules-3.5.0.pom (5.4 kB at 76 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/commons-codec/commons-codec/1.17.0/commons-codec-1.17.0.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/commons-codec/commons-codec/1.17.0/commons-codec-1.17.0.pom (18 kB at 255 kB/s)
+Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.0/plexus-xml-3.0.0.jar
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/enforcer/enforcer-api/3.5.0/enforcer-api-3.5.0.jar
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/enforcer/enforcer-rules/3.5.0/enforcer-rules-3.5.0.jar
+Downloading from central: https://repo.maven.apache.org/maven2/commons-codec/commons-codec/1.17.0/commons-codec-1.17.0.jar
+Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-xml/3.0.0/plexus-xml-3.0.0.jar (93 kB at 782 kB/s)
+Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/enforcer/enforcer-api/3.5.0/enforcer-api-3.5.0.jar (15 kB at 91 kB/s)
+Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/enforcer/enforcer-rules/3.5.0/enforcer-rules-3.5.0.jar (147 kB at 699 kB/s)
+Downloaded from central: https://repo.maven.apache.org/maven2/commons-codec/commons-codec/1.17.0/commons-codec-1.17.0.jar (373 kB at 1.4 MB/s)
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.14:prepare-agent (wire-up-coverage-instrumentation) @ copilot-sdk-java ---
+[INFO] testExecutionAgentArgs set to -javaagent:/home/edburns/.m2/repository/org/jacoco/org.jacoco.agent/0.8.14/org.jacoco.agent-0.8.14-runtime.jar=destfile=/home/edburns/workareas/copilot-sdk/java/target/jacoco-test-results/sdk-tests.exec,includes=com/github/copilot/**,excludes=com/github/copilot/E2ETestContext*:com/github/copilot/CapiProxy*
+[INFO] 
+[INFO] --- build-helper-maven-plugin:3.6.1:add-source (add-generated-source) @ copilot-sdk-java ---
+[INFO] Source directory: /home/edburns/workareas/copilot-sdk/java/src/generated/java added.
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ copilot-sdk-java ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /home/edburns/workareas/copilot-sdk/java/src/main/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.15.0:compile (default-compile) @ copilot-sdk-java ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 853 source files with javac [debug release 17 module-path] to target/classes
+[INFO] /home/edburns/workareas/copilot-sdk/java/src/main/java/com/github/copilot/CopilotSession.java: Some input files use or override a deprecated API.
+[INFO] /home/edburns/workareas/copilot-sdk/java/src/main/java/com/github/copilot/CopilotSession.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.15.0:compile (compile-java25) @ copilot-sdk-java ---
+[INFO] Compiling 1 source file with javac [debug release 25] to target/classes/META-INF/versions/25
+[INFO] 
+[INFO] --- maven-antrun-plugin:3.2.0:run (clone-or-update-copilot-sdk) @ copilot-sdk-java ---
+[INFO] Executing tasks
+[WARNING]      [echo] Cloning copilot-sdk repository at commit 60104052cd914949ddf8c7a31e1856cd6db0a57c...
+[INFO]      [exec] Cloning into '/home/edburns/workareas/copilot-sdk/java/target/copilot-sdk'...
+[INFO]      [exec] From https://github.com/github/copilot-sdk
+[INFO]      [exec]  * branch            60104052cd914949ddf8c7a31e1856cd6db0a57c -> FETCH_HEAD
+[INFO]      [exec] HEAD is now at 6010405 Multitenancy hardening: Client Mode (#1428)
+[INFO] Executed tasks
+[INFO] 
+[INFO] --- exec-maven-plugin:3.6.3:exec (install-harness-dependencies) @ copilot-sdk-java ---
+
+added 146 packages, and audited 147 packages in 24s
+
+45 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+[INFO] 
+[INFO] --- exec-maven-plugin:3.6.3:exec (install-nodejs-cli-dependencies) @ copilot-sdk-java ---
+
+added 203 packages, and audited 204 packages in 15s
+
+62 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ copilot-sdk-java ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 2 resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.15.0:testCompile (default-testCompile) @ copilot-sdk-java ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 63 source files with javac [debug release 17 module-path] to target/test-classes
+[INFO] /home/edburns/workareas/copilot-sdk/java/src/test/java/com/github/copilot/CommandsTest.java: Some input files use or override a deprecated API.
+[INFO] /home/edburns/workareas/copilot-sdk/java/src/test/java/com/github/copilot/CommandsTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- maven-antrun-plugin:3.2.0:run (print-test-jdk-banner) @ copilot-sdk-java ---
+[INFO] Executing tasks
+[WARNING]      [echo] ⚠⚠⚠ Using Java 25.0.2 (Microsoft) to run tests.
+[INFO] Executed tasks
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.5:test (default-test) @ copilot-sdk-java ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.github.copilot.AgentInfoTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.146 s -- in com.github.copilot.AgentInfoTest
+[INFO] Running com.github.copilot.AgentModeTest
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.546 s -- in com.github.copilot.AgentModeTest
+[INFO] Running com.github.copilot.AskUserTest
+May 27, 2026 9:56:52 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'ask_user/should_handle_freeform_user_input_response' expects prompts: [Ask me a question using ask_user and then include my answer in your response. The question should be 'What is]
+May 27, 2026 9:56:56 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'ask_user/should_receive_choices_in_user_input_request' expects prompts: ["Use the ask_user tool to ask me to pick between exactly two options: 'Red' and 'Blue'. These should be]
+May 27, 2026 9:56:58 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'ask_user/should_invoke_user_input_handler_when_model_uses_ask_user_tool' expects prompts: [Ask me to choose between 'Option A' and 'Option B' using the ask_user tool. Wait for my response before]
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.29 s -- in com.github.copilot.AskUserTest
+[INFO] Running com.github.copilot.CliServerManagerTest
+[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.166 s -- in com.github.copilot.CliServerManagerTest
+[INFO] Running com.github.copilot.ClosedSessionGuardTest
+May 27, 2026 9:57:02 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:04 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:06 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:08 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:10 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:12 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:14 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:16 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:18 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:20 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:22 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:25 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:27 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:31 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:34 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:57:36 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+[INFO] Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 38.13 s -- in com.github.copilot.ClosedSessionGuardTest
+[INFO] Running com.github.copilot.CommandsTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.078 s -- in com.github.copilot.CommandsTest
+[INFO] Running com.github.copilot.CompactionTest
+May 27, 2026 9:57:41 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'compaction/should_not_emit_compaction_events_when_infinite_sessions_disabled' expects prompts: [What is 2+2?]
+[WARNING] Tests run: 2, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 5.485 s -- in com.github.copilot.CompactionTest
+[INFO] Running com.github.copilot.ConfigCloneTest
+[INFO] Tests run: 27, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.118 s -- in com.github.copilot.ConfigCloneTest
+[INFO] Running com.github.copilot.CopilotClientModeTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.020 s -- in com.github.copilot.CopilotClientModeTest
+[INFO] Running com.github.copilot.CopilotClientTest
+May 27, 2026 9:58:17 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: CopilotClient.start failed. Elapsed=PT30.004S
+java.util.concurrent.TimeoutException
+	at java.base/java.util.concurrent.CompletableFuture.timedGet(CompletableFuture.java:1981)
+	at java.base/java.util.concurrent.CompletableFuture.get(CompletableFuture.java:2116)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CopilotClient.verifyProtocolVersion(CopilotClient.java:272)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CopilotClient.startCoreBody(CopilotClient.java:236)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.exec(CompletableFuture.java:1781)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:511)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1450)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2019)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187)
+
+May 27, 2026 9:58:17 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: CopilotClient.start failed. Elapsed=PT0.002S
+java.io.IOException: Cannot run program "/nonexistent/path/to/cli": Exec failed, error: 2 (No such file or directory) 
+	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1112)
+	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1046)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CliServerManager.startCliServer(CliServerManager.java:168)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CopilotClient.startCoreBody(CopilotClient.java:220)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.exec(CompletableFuture.java:1781)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:511)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1450)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2019)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187)
+Caused by: java.io.IOException: Exec failed, error: 2 (No such file or directory) 
+	at java.base/java.lang.ProcessImpl.forkAndExec(Native Method)
+	at java.base/java.lang.ProcessImpl.<init>(ProcessImpl.java:300)
+	at java.base/java.lang.ProcessImpl.start(ProcessImpl.java:231)
+	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1078)
+	... 9 more
+
+May 27, 2026 9:58:22 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: CopilotClient.start failed. Elapsed=PT0.002S
+java.io.IOException: Cannot run program "/nonexistent/path/to/cli": Exec failed, error: 2 (No such file or directory) 
+	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1112)
+	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1046)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CliServerManager.startCliServer(CliServerManager.java:168)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CopilotClient.startCoreBody(CopilotClient.java:220)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.exec(CompletableFuture.java:1781)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:511)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1450)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2019)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187)
+Caused by: java.io.IOException: Exec failed, error: 2 (No such file or directory) 
+	at java.base/java.lang.ProcessImpl.forkAndExec(Native Method)
+	at java.base/java.lang.ProcessImpl.<init>(ProcessImpl.java:300)
+	at java.base/java.lang.ProcessImpl.start(ProcessImpl.java:231)
+	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1078)
+	... 9 more
+
+May 27, 2026 9:58:22 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: CopilotClient.start failed. Elapsed=PT0.012S
+java.io.IOException: Cannot run program "/nonexistent/path/to/cli": Exec failed, error: 2 (No such file or directory) 
+	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1112)
+	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1046)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CliServerManager.startCliServer(CliServerManager.java:168)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CopilotClient.startCoreBody(CopilotClient.java:220)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.exec(CompletableFuture.java:1781)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:511)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1450)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2019)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187)
+Caused by: java.io.IOException: Exec failed, error: 2 (No such file or directory) 
+	at java.base/java.lang.ProcessImpl.forkAndExec(Native Method)
+	at java.base/java.lang.ProcessImpl.<init>(ProcessImpl.java:300)
+	at java.base/java.lang.ProcessImpl.start(ProcessImpl.java:231)
+	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1078)
+	... 9 more
+
+May 27, 2026 9:58:22 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: CopilotClient.start failed. Elapsed=PT0.003S
+java.io.IOException: Cannot run program "/nonexistent/path/to/cli": Exec failed, error: 2 (No such file or directory) 
+	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1112)
+	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1046)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CliServerManager.startCliServer(CliServerManager.java:168)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CopilotClient.startCoreBody(CopilotClient.java:220)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.exec(CompletableFuture.java:1781)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:511)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1450)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2019)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187)
+Caused by: java.io.IOException: Exec failed, error: 2 (No such file or directory) 
+	at java.base/java.lang.ProcessImpl.forkAndExec(Native Method)
+	at java.base/java.lang.ProcessImpl.<init>(ProcessImpl.java:300)
+	at java.base/java.lang.ProcessImpl.start(ProcessImpl.java:231)
+	at java.base/java.lang.ProcessBuilder.start(ProcessBuilder.java:1078)
+	... 9 more
+
+[INFO] Tests run: 38, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 40.30 s -- in com.github.copilot.CopilotClientTest
+[INFO] Running com.github.copilot.CopilotSessionTest
+May 27, 2026 9:58:26 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_get_session_metadata_by_id' expects prompts: [Say hello]
+May 27, 2026 9:58:29 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_create_a_session_with_defaultagent_excludedtools' expects prompts: [What is 1+1?]
+May 27, 2026 9:58:31 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:58:33 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_list_sessions' expects prompts: [Say hello, Say goodbye]
+May 27, 2026 9:58:36 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_delete_session' expects prompts: [Hello]
+May 27, 2026 9:58:38 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: JsonRpc.invoke JSON-RPC request finished. Elapsed=PT0.016S, Method=session.resume, RequestId=5, Status=Failed
+java.util.concurrent.CompletionException: com.github.copilot.JsonRpcException: Request session.resume failed with message: Session not found: 6727df67-df52-40ca-8b50-7eb9f21d6f3f
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:376)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:391)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:657)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:281)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: com.github.copilot.JsonRpcException: Request session.resume failed with message: Session not found: 6727df67-df52-40ca-8b50-7eb9f21d6f3f
+	... 7 more
+
+May 27, 2026 9:58:38 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: CopilotClient.resumeSession failed. Elapsed=PT0.019S, SessionId=6727df67-df52-40ca-8b50-7eb9f21d6f3f
+java.util.concurrent.CompletionException: com.github.copilot.JsonRpcException: Request session.resume failed with message: Session not found: 6727df67-df52-40ca-8b50-7eb9f21d6f3f
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:376)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:391)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:657)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:281)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: com.github.copilot.JsonRpcException: Request session.resume failed with message: Session not found: 6727df67-df52-40ca-8b50-7eb9f21d6f3f
+	... 7 more
+
+May 27, 2026 9:58:38 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_get_last_session_id' expects prompts: [Say hello]
+May 27, 2026 9:58:40 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/sendandwait_blocks_until_session_idle_and_returns_final_assistant_message' expects prompts: [What is 2+2?]
+May 27, 2026 9:58:43 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/sendandwait_throws_on_timeout' expects prompts: [Run 'sleep 2 && echo done']
+May 27, 2026 9:58:44 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: CopilotSession.sendAndWait failed. Elapsed=PT0.100S, SessionId=94092f76-75c0-4a68-bbb1-c11b78c0f282, CompletedBy=timeout
+java.util.concurrent.TimeoutException: sendAndWait timed out after 100ms
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CopilotSession.lambda$sendAndWait$2(CopilotSession.java:559)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:309)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+May 27, 2026 9:58:44 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_abort_a_session' expects prompts: [run the shell command 'sleep 100' (note this works on both bash and PowerShell), What is 2+2?]
+May 27, 2026 9:58:47 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_create_a_session_with_availabletools' expects prompts: [What is 1+1?]
+May 27, 2026 9:58:49 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_list_sessions' expects prompts: [Say hello, Say goodbye]
+May 27, 2026 9:58:51 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_create_session_with_custom_config_dir' expects prompts: [What is 1+1?]
+May 27, 2026 9:58:53 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_create_a_session_with_appended_systemmessage_config' expects prompts: [What is your full name?]
+May 27, 2026 9:58:54 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_create_session_with_custom_tool' expects prompts: [What is the secret number for key ALPHA?]
+May 27, 2026 9:58:56 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:58:58 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: JsonRpc.invoke JSON-RPC request finished. Elapsed=PT0.014S, Method=session.resume, RequestId=2, Status=Failed
+java.util.concurrent.CompletionException: com.github.copilot.JsonRpcException: Request session.resume failed with message: Session not found: non-existent-session-id
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:376)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:391)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:657)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:281)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: com.github.copilot.JsonRpcException: Request session.resume failed with message: Session not found: non-existent-session-id
+	... 7 more
+
+May 27, 2026 9:58:58 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: CopilotClient.resumeSession failed. Elapsed=PT0.015S, SessionId=non-existent-session-id
+java.util.concurrent.CompletionException: com.github.copilot.JsonRpcException: Request session.resume failed with message: Session not found: non-existent-session-id
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:376)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:391)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:657)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:281)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: com.github.copilot.JsonRpcException: Request session.resume failed with message: Session not found: non-existent-session-id
+	... 7 more
+
+May 27, 2026 9:58:58 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_have_stateful_conversation' expects prompts: [What is 1+1?, Now if you double that, what do you get?]
+May 27, 2026 9:59:00 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+May 27, 2026 9:59:02 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_resume_a_session_using_the_same_client' expects prompts: [What is 1+1?, Now if you double that, what do you get?]
+May 27, 2026 9:59:04 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_create_a_session_with_excludedtools' expects prompts: [What is 1+1?]
+May 27, 2026 9:59:06 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_create_a_session_with_replaced_systemmessage_config' expects prompts: [What is your full name?]
+May 27, 2026 9:59:08 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_list_sessions' expects prompts: [Say hello, Say goodbye]
+May 27, 2026 9:59:09 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/send_returns_immediately_while_events_stream_in_background' expects prompts: [Run 'sleep 2 && echo done']
+May 27, 2026 10:00:11 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'session/should_receive_session_events' expects prompts: [What is 100+200?]
+[ERROR] Tests run: 23, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 107.9 s <<< FAILURE! -- in com.github.copilot.CopilotSessionTest
+[ERROR] com.github.copilot.CopilotSessionTest.testSendReturnsImmediatelyWhileEventsStreamInBackground -- Time elapsed: 61.59 s <<< ERROR!
+java.util.concurrent.TimeoutException
+	at java.base/java.util.concurrent.CompletableFuture.timedGet(CompletableFuture.java:1981)
+	at java.base/java.util.concurrent.CompletableFuture.get(CompletableFuture.java:2116)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CopilotSessionTest.testSendReturnsImmediatelyWhileEventsStreamInBackground(CopilotSessionTest.java:215)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+
+[INFO] Running com.github.copilot.CreateSessionReKeyEntryTest
+May 27, 2026 10:00:13 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: JsonRpc.invoke JSON-RPC request finished. Elapsed=PT0.085S, Method=session.options.update, RequestId=2, Status=Failed
+java.util.concurrent.CompletionException: com.github.copilot.JsonRpcException: simulated options update failure
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:376)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:391)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:657)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:281)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: com.github.copilot.JsonRpcException: simulated options update failure
+	... 7 more
+
+May 27, 2026 10:00:13 PM com.github.copilot.CopilotClient lambda$updateSessionOptionsForMode$1
+WARNING: session.options.update failed for session server-returned-id
+java.util.concurrent.CompletionException: com.github.copilot.JsonRpcException: simulated options update failure
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:376)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:391)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:657)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:281)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: com.github.copilot.JsonRpcException: simulated options update failure
+	... 7 more
+
+May 27, 2026 10:00:18 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: CopilotClient.createSession failed. Elapsed=PT5.099S, SessionId=client-supplied-id
+java.util.concurrent.CompletionException: com.github.copilot.JsonRpcException: simulated options update failure
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:376)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:391)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:657)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:281)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: com.github.copilot.JsonRpcException: simulated options update failure
+	... 7 more
+
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.303 s -- in com.github.copilot.CreateSessionReKeyEntryTest
+[INFO] Running com.github.copilot.DataObjectCoverageTest
+[INFO] Tests run: 24, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.055 s -- in com.github.copilot.DataObjectCoverageTest
+[INFO] Running com.github.copilot.DocumentationSamplesTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in com.github.copilot.DocumentationSamplesTest
+[INFO] Running com.github.copilot.ElicitationTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.052 s -- in com.github.copilot.ElicitationTest
+[INFO] Running com.github.copilot.ErrorHandlingTest
+May 27, 2026 10:00:19 PM com.github.copilot.ErrorHandlingTest testPermissionHandlerErrors_sessionErrorEventContainsDetails
+INFO: Running test: testPermissionHandlerErrors_sessionErrorEventContainsDetails
+May 27, 2026 10:00:19 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'permissions/permission_handler_errors' expects prompts: [Run 'echo test'. If you can't, say 'failed'.]
+May 27, 2026 10:00:22 PM com.github.copilot.CopilotSession lambda$executePermissionAndRespondAsync$0
+WARNING: Error executing permission handler for requestId=e0603035-c8e3-4d93-813a-ecb5fb1da5e9
+java.lang.RuntimeException: Test error message
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.ErrorHandlingTest.lambda$testPermissionHandlerErrors_sessionErrorEventContainsDetails$0(ErrorHandlingTest.java:178)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CopilotSession.lambda$executePermissionAndRespondAsync$0(CopilotSession.java:940)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1825)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1817)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:511)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1450)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2019)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187)
+
+May 27, 2026 10:00:22 PM com.github.copilot.ErrorHandlingTest testHandlesToolCallingErrors_sessionContinuesAfterToolError
+INFO: Running test: testHandlesToolCallingErrors_sessionContinuesAfterToolError
+May 27, 2026 10:00:22 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'tools/handles_tool_calling_errors' expects prompts: [What is my location? If you can't find out, just say 'unknown'.]
+May 27, 2026 10:00:24 PM com.github.copilot.ErrorHandlingTest testHandlesToolCallingErrors_toolReturnsFailureResult
+INFO: Running test: testHandlesToolCallingErrors_toolReturnsFailureResult
+May 27, 2026 10:00:24 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'tools/handles_tool_calling_errors' expects prompts: [What is my location? If you can't find out, just say 'unknown'.]
+May 27, 2026 10:00:26 PM com.github.copilot.ErrorHandlingTest testHandlesToolCallingErrors_toolErrorDoesNotCrashSession
+INFO: Running test: testHandlesToolCallingErrors_toolErrorDoesNotCrashSession
+May 27, 2026 10:00:26 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'tools/handles_tool_calling_errors' expects prompts: [What is my location? If you can't find out, just say 'unknown'.]
+May 27, 2026 10:00:28 PM com.github.copilot.ErrorHandlingTest testShouldHandlePermissionHandlerErrorsGracefully_deniesPermission
+INFO: Running test: testShouldHandlePermissionHandlerErrorsGracefully_deniesPermission
+May 27, 2026 10:00:28 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'permissions/should_handle_permission_handler_errors_gracefully' expects prompts: [Run 'echo test'. If you can't, say 'failed'.]
+May 27, 2026 10:00:30 PM com.github.copilot.CopilotSession lambda$executePermissionAndRespondAsync$0
+WARNING: Error executing permission handler for requestId=4a93893d-a35e-417c-8892-a7cf926f855f
+java.lang.RuntimeException: Permission handler crashed
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.ErrorHandlingTest.lambda$testShouldHandlePermissionHandlerErrorsGracefully_deniesPermission$0(ErrorHandlingTest.java:139)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.CopilotSession.lambda$executePermissionAndRespondAsync$0(CopilotSession.java:940)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1825)
+	at java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1817)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:511)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1450)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:2019)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:187)
+
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.89 s -- in com.github.copilot.ErrorHandlingTest
+[INFO] Running com.github.copilot.EventFidelityTest
+May 27, 2026 10:00:31 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'event_fidelity/should_emit_assistant_usage_event_after_model_call' expects prompts: [What is 5+5? Reply with just the number.]
+May 27, 2026 10:00:33 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'event_fidelity/should_emit_session_usage_info_event_after_model_call' expects prompts: [What is 5+5? Reply with just the number.]
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.690 s -- in com.github.copilot.EventFidelityTest
+[INFO] Running com.github.copilot.ExecutorWiringTest
+May 27, 2026 10:00:37 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'ask_user/should_invoke_user_input_handler_when_model_uses_ask_user_tool' expects prompts: [Ask me to choose between 'Option A' and 'Option B' using the ask_user tool. Wait for my response before]
+May 27, 2026 10:00:39 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'tools/invokes_custom_tool' expects prompts: [Use encrypt_string to encrypt this string: Hello]
+May 27, 2026 10:00:41 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'hooks/invoke_pre_tool_use_hook_when_model_runs_a_tool' expects prompts: [Read the contents of hello.txt and tell me what it says]
+May 27, 2026 10:00:43 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'permissions/permission_handler_for_write_operations' expects prompts: [Edit test.txt and replace 'original' with 'modified']
+May 27, 2026 10:00:46 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'tools/invokes_custom_tool' expects prompts: [Use encrypt_string to encrypt this string: Hello]
+May 27, 2026 10:00:48 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'tools/invokes_custom_tool' expects prompts: [Use encrypt_string to encrypt this string: Hello]
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 14.33 s -- in com.github.copilot.ExecutorWiringTest
+[INFO] Running com.github.copilot.ForwardCompatibilityTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s -- in com.github.copilot.ForwardCompatibilityTest
+[INFO] Running com.github.copilot.HooksTest
+May 27, 2026 10:00:51 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'hooks/invoke_both_hooks_for_single_tool_call' expects prompts: [Read the contents of both.txt]
+May 27, 2026 10:00:54 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'hooks/invoke_pre_tool_use_hook_when_model_runs_a_tool' expects prompts: [Read the contents of hello.txt and tell me what it says]
+May 27, 2026 10:00:56 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'hooks/invoke_post_tool_use_hook_after_model_runs_a_tool' expects prompts: [Read the contents of world.txt and tell me what it says]
+May 27, 2026 10:00:58 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'hooks/deny_tool_execution_when_pre_tool_use_returns_deny' expects prompts: [Edit protected.txt and replace 'Original' with 'Modified']
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.81 s -- in com.github.copilot.HooksTest
+[INFO] Running com.github.copilot.InternalExecutorProviderTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.415 s -- in com.github.copilot.InternalExecutorProviderTest
+[INFO] Running com.github.copilot.JsonIncludeNonNullTest
+[INFO] Tests run: 18, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.041 s -- in com.github.copilot.JsonIncludeNonNullTest
+[INFO] Running com.github.copilot.JsonRpcClientTest
+May 27, 2026 10:01:01 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: JsonRpc.invoke JSON-RPC request finished. Elapsed=PT0.001S, Method=test, RequestId=1, Status=Failed
+java.util.concurrent.CompletionException: com.github.copilot.JsonRpcException: Unknown error
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:376)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:391)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:657)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:281)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: com.github.copilot.JsonRpcException: Unknown error
+	... 7 more
+
+May 27, 2026 10:01:01 PM com.github.copilot.JsonRpcClient handleMessage
+SEVERE: Error handling method fail.method
+java.lang.RuntimeException: handler error
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClientTest.lambda$testHandlerThrowsExceptionWithId$0(JsonRpcClientTest.java:317)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:299)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+May 27, 2026 10:01:01 PM com.github.copilot.JsonRpcClient handleMessage
+SEVERE: Error parsing JSON-RPC message
+com.fasterxml.jackson.core.JsonParseException: Unrecognized token 'not': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')
+ at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 1]
+	at com.fasterxml.jackson.core@2.21.3/com.fasterxml.jackson.core.JsonParser._constructReadException(JsonParser.java:2675)
+	at com.fasterxml.jackson.core@2.21.3/com.fasterxml.jackson.core.json.ReaderBasedJsonParser._reportInvalidToken(ReaderBasedJsonParser.java:3025)
+	at com.fasterxml.jackson.core@2.21.3/com.fasterxml.jackson.core.json.ReaderBasedJsonParser._reportInvalidToken(ReaderBasedJsonParser.java:2995)
+	at com.fasterxml.jackson.core@2.21.3/com.fasterxml.jackson.core.json.ReaderBasedJsonParser._matchToken(ReaderBasedJsonParser.java:2760)
+	at com.fasterxml.jackson.core@2.21.3/com.fasterxml.jackson.core.json.ReaderBasedJsonParser._matchNull(ReaderBasedJsonParser.java:2746)
+	at com.fasterxml.jackson.core@2.21.3/com.fasterxml.jackson.core.json.ReaderBasedJsonParser.nextToken(ReaderBasedJsonParser.java:750)
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.ObjectMapper._readTreeAndClose(ObjectMapper.java:5081)
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.ObjectMapper.readTree(ObjectMapper.java:3349)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:268)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+May 27, 2026 10:01:01 PM com.github.copilot.JsonRpcClient handleMessage
+SEVERE: Error handling method fail.notify
+java.lang.RuntimeException: notify error
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClientTest.lambda$testHandlerThrowsExceptionWithoutId$0(JsonRpcClientTest.java:336)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:299)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+May 27, 2026 10:01:02 PM com.github.copilot.JsonRpcClient lambda$startReader$0
+SEVERE: Error in JSON-RPC reader
+java.io.IOException: Stream closed
+	at java.base/java.io.BufferedInputStream.ensureOpen(BufferedInputStream.java:207)
+	at java.base/java.io.BufferedInputStream.read(BufferedInputStream.java:379)
+	at java.base/java.io.BufferedInputStream.fill(BufferedInputStream.java:289)
+	at java.base/java.io.BufferedInputStream.read(BufferedInputStream.java:308)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:211)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+May 27, 2026 10:01:02 PM com.github.copilot.JsonRpcClient lambda$startReader$0
+SEVERE: Error in JSON-RPC reader
+java.net.SocketException: Socket closed
+	at java.base/sun.nio.ch.NioSocketImpl.ensureOpenAndConnected(NioSocketImpl.java:162)
+	at java.base/sun.nio.ch.NioSocketImpl.beginRead(NioSocketImpl.java:225)
+	at java.base/sun.nio.ch.NioSocketImpl.implRead(NioSocketImpl.java:293)
+	at java.base/sun.nio.ch.NioSocketImpl.read(NioSocketImpl.java:354)
+	at java.base/sun.nio.ch.NioSocketImpl$1.read(NioSocketImpl.java:798)
+	at java.base/java.net.Socket$SocketInputStream.implRead(Socket.java:974)
+	at java.base/java.net.Socket$SocketInputStream.read(Socket.java:964)
+	at java.base/java.io.BufferedInputStream.fill(BufferedInputStream.java:289)
+	at java.base/java.io.BufferedInputStream.read(BufferedInputStream.java:308)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:211)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+May 27, 2026 10:01:02 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: JsonRpc.invoke JSON-RPC request finished. Elapsed=PT0.000S, Method=test, RequestId=1, Status=Failed
+java.util.concurrent.CompletionException: java.net.SocketException: Socket closed
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:376)
+	at java.base/java.util.concurrent.CompletableFuture.uniApplyNow(CompletableFuture.java:695)
+	at java.base/java.util.concurrent.CompletableFuture.uniApplyStage(CompletableFuture.java:683)
+	at java.base/java.util.concurrent.CompletableFuture.thenApply(CompletableFuture.java:2227)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.invoke(JsonRpcClient.java:125)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClientTest.testInvokeWithSendFailure(JsonRpcClientTest.java:204)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:786)
+	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:514)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:161)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:152)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:91)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:112)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:94)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:87)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$4(TestMethodTestDescriptor.java:221)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:217)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:159)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:70)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:157)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:230)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:204)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:172)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:101)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:64)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:150)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:63)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:109)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:91)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$1(InterceptingLauncher.java:39)
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:38)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.executeWithoutCancellationToken(LauncherAdapter.java:60)
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.execute(LauncherAdapter.java:52)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:203)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:168)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:136)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+Caused by: java.net.SocketException: Socket closed
+	at java.base/sun.nio.ch.NioSocketImpl.ensureOpenAndConnected(NioSocketImpl.java:162)
+	at java.base/sun.nio.ch.NioSocketImpl.beginWrite(NioSocketImpl.java:370)
+	at java.base/sun.nio.ch.NioSocketImpl.implWrite(NioSocketImpl.java:415)
+	at java.base/sun.nio.ch.NioSocketImpl.write(NioSocketImpl.java:448)
+	at java.base/sun.nio.ch.NioSocketImpl$2.write(NioSocketImpl.java:821)
+	at java.base/java.net.Socket$SocketOutputStream.implWrite(Socket.java:1086)
+	at java.base/java.net.Socket$SocketOutputStream.write(Socket.java:1076)
+	at java.base/java.io.OutputStream.write(OutputStream.java:124)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.sendMessage(JsonRpcClient.java:189)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.invoke(JsonRpcClient.java:119)
+	... 77 more
+
+May 27, 2026 10:01:02 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: JsonRpc.invoke JSON-RPC request finished. Elapsed=PT0.000S, Method=test, RequestId=1, Status=Failed
+java.util.concurrent.CompletionException: java.io.IOException: Client closed
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:376)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:391)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:657)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$close$0(JsonRpcClient.java:332)
+	at java.base/java.util.concurrent.ConcurrentHashMap.forEach(ConcurrentHashMap.java:1619)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.close(JsonRpcClient.java:332)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClientTest.testCloseWithPendingRequests(JsonRpcClientTest.java:449)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:786)
+	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:514)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:161)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:152)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:91)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:112)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:94)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:87)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$4(TestMethodTestDescriptor.java:221)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:217)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:159)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:70)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:157)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:230)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:204)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:172)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:101)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:64)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:150)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:63)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:109)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:91)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$1(InterceptingLauncher.java:39)
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:38)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.executeWithoutCancellationToken(LauncherAdapter.java:60)
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.execute(LauncherAdapter.java:52)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:203)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:168)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:136)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+Caused by: java.io.IOException: Client closed
+	... 80 more
+
+May 27, 2026 10:01:02 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: JsonRpc.invoke JSON-RPC request finished. Elapsed=PT0.001S, Method=test, RequestId=1, Status=Failed
+java.util.concurrent.CompletionException: com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.Integer` from Object value (token `JsonToken.START_OBJECT`)
+ at [Source: UNKNOWN; byte offset: #UNKNOWN]
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$invoke$0(JsonRpcClient.java:137)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:667)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:2206)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:283)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.lang.Integer` from Object value (token `JsonToken.START_OBJECT`)
+ at [Source: UNKNOWN; byte offset: #UNKNOWN]
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.exc.MismatchedInputException.from(MismatchedInputException.java:72)
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.DeserializationContext.reportInputMismatch(DeserializationContext.java:1814)
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.DeserializationContext.handleUnexpectedToken(DeserializationContext.java:1588)
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.DeserializationContext.handleUnexpectedToken(DeserializationContext.java:1535)
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.deser.std.StdDeserializer._parseInteger(StdDeserializer.java:867)
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.deser.std.NumberDeserializers$IntegerDeserializer.deserialize(NumberDeserializers.java:543)
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.deser.std.NumberDeserializers$IntegerDeserializer.deserialize(NumberDeserializers.java:518)
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.deser.DefaultDeserializationContext.readRootValue(DefaultDeserializationContext.java:342)
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.ObjectMapper._readValue(ObjectMapper.java:5023)
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3104)
+	at com.fasterxml.jackson.databind@2.21.3/com.fasterxml.jackson.databind.ObjectMapper.treeToValue(ObjectMapper.java:3572)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$invoke$0(JsonRpcClient.java:129)
+	... 10 more
+
+May 27, 2026 10:01:02 PM com.github.copilot.LoggingHelpers logTiming
+WARNING: JsonRpc.invoke JSON-RPC request finished. Elapsed=PT0.000S, Method=test, RequestId=1, Status=Failed
+java.util.concurrent.CompletionException: com.github.copilot.JsonRpcException: bad request
+	at java.base/java.util.concurrent.CompletableFuture.wrapInCompletionException(CompletableFuture.java:323)
+	at java.base/java.util.concurrent.CompletableFuture.encodeThrowable(CompletableFuture.java:376)
+	at java.base/java.util.concurrent.CompletableFuture.completeThrowable(CompletableFuture.java:391)
+	at java.base/java.util.concurrent.CompletableFuture$UniApply.tryFire(CompletableFuture.java:657)
+	at java.base/java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:531)
+	at java.base/java.util.concurrent.CompletableFuture.completeExceptionally(CompletableFuture.java:2221)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.handleMessage(JsonRpcClient.java:281)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.JsonRpcClient.lambda$startReader$0(JsonRpcClient.java:256)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:545)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:328)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: com.github.copilot.JsonRpcException: bad request
+	... 7 more
+
+[INFO] Tests run: 23, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.433 s -- in com.github.copilot.JsonRpcClientTest
+[INFO] Running com.github.copilot.LifecycleEventManagerTest
+May 27, 2026 10:01:02 PM com.github.copilot.LifecycleEventManager dispatch
+WARNING: Lifecycle handler error
+java.lang.RuntimeException: wildcard handler error
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.LifecycleEventManagerTest.lambda$wildcardHandlerExceptionDoesNotPreventOtherHandlers$0(LifecycleEventManagerTest.java:147)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.LifecycleEventManager.dispatch(LifecycleEventManager.java:98)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.LifecycleEventManagerTest.lambda$wildcardHandlerExceptionDoesNotPreventOtherHandlers$1(LifecycleEventManagerTest.java:151)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+	at org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3199)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.LifecycleEventManagerTest.wildcardHandlerExceptionDoesNotPreventOtherHandlers(LifecycleEventManagerTest.java:151)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:786)
+	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:514)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:161)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:152)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:91)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:112)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:94)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:87)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$4(TestMethodTestDescriptor.java:221)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:217)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:159)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:70)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:157)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:230)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:204)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:172)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:101)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:64)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:150)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:63)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:109)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:91)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$1(InterceptingLauncher.java:39)
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:38)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.executeWithoutCancellationToken(LauncherAdapter.java:60)
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.execute(LauncherAdapter.java:52)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:203)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:168)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:136)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+
+May 27, 2026 10:01:02 PM com.github.copilot.LifecycleEventManager dispatch
+WARNING: Lifecycle handler error
+java.lang.RuntimeException: typed error
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.LifecycleEventManagerTest.lambda$typedAndWildcardErrorsDoNotAffectEachOther$0(LifecycleEventManagerTest.java:161)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.LifecycleEventManager.dispatch(LifecycleEventManager.java:90)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.LifecycleEventManagerTest.lambda$typedAndWildcardErrorsDoNotAffectEachOther$1(LifecycleEventManagerTest.java:166)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+	at org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3199)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.LifecycleEventManagerTest.typedAndWildcardErrorsDoNotAffectEachOther(LifecycleEventManagerTest.java:166)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:786)
+	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:514)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:161)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:152)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:91)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:112)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:94)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:87)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$4(TestMethodTestDescriptor.java:221)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:217)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:159)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:70)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:157)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:230)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:204)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:172)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:101)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:64)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:150)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:63)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:109)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:91)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$1(InterceptingLauncher.java:39)
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:38)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.executeWithoutCancellationToken(LauncherAdapter.java:60)
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.execute(LauncherAdapter.java:52)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:203)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:168)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:136)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+
+May 27, 2026 10:01:02 PM com.github.copilot.LifecycleEventManager dispatch
+WARNING: Lifecycle handler error
+java.lang.RuntimeException: typed handler error
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.LifecycleEventManagerTest.lambda$typedHandlerExceptionDoesNotPreventOtherHandlers$0(LifecycleEventManagerTest.java:133)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.LifecycleEventManager.dispatch(LifecycleEventManager.java:90)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.LifecycleEventManagerTest.lambda$typedHandlerExceptionDoesNotPreventOtherHandlers$1(LifecycleEventManagerTest.java:138)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:49)
+	at org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:36)
+	at org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3199)
+	at com.github.copilot.java@1.0.0-beta-java.5-SNAPSHOT/com.github.copilot.LifecycleEventManagerTest.typedHandlerExceptionDoesNotPreventOtherHandlers(LifecycleEventManagerTest.java:138)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:786)
+	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:514)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:161)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:152)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:91)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:112)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:94)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:87)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$4(TestMethodTestDescriptor.java:221)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:217)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:159)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:70)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:157)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:230)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:204)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:172)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:101)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:64)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:150)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:63)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:109)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:91)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$1(InterceptingLauncher.java:39)
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:38)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.executeWithoutCancellationToken(LauncherAdapter.java:60)
+	at org.apache.maven.surefire.junitplatform.LauncherAdapter.execute(LauncherAdapter.java:52)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:203)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:168)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:136)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.038 s -- in com.github.copilot.LifecycleEventManagerTest
+[INFO] Running com.github.copilot.McpAndAgentsTest
+May 27, 2026 10:01:04 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mcp_and_agents/should_accept_mcp_server_configuration_on_session_resume' expects prompts: [What is 1+1?]
+May 27, 2026 10:01:07 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mcp_and_agents/should_accept_mcp_server_configuration_on_session_create' expects prompts: [What is 2+2?]
+May 27, 2026 10:01:10 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mcp_and_agents/should_accept_mcp_server_configuration_on_session_create' expects prompts: [What is 2+2?]
+May 27, 2026 10:01:14 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mcp_and_agents/should_accept_custom_agent_configuration_on_session_create' expects prompts: [What is 5+5?]
+May 27, 2026 10:01:16 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mcp_and_agents/should_accept_custom_agent_configuration_on_session_create' expects prompts: [What is 5+5?]
+May 27, 2026 10:01:18 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mcp_and_agents/should_accept_both_mcp_servers_and_custom_agents' expects prompts: [What is 7+7?]
+May 27, 2026 10:01:20 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mcp_and_agents/should_accept_custom_agent_configuration_on_session_resume' expects prompts: [What is 1+1?, What is 6+6?]
+May 27, 2026 10:01:23 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mcp_and_agents/should_accept_custom_agent_configuration_on_session_create' expects prompts: [What is 5+5?]
+May 27, 2026 10:01:24 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mcp_and_agents/should_accept_both_mcp_servers_and_custom_agents' expects prompts: [What is 7+7?]
+May 27, 2026 10:01:27 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mcp_and_agents/should_accept_defaultagent_configuration_on_session_resume' expects prompts: [What is 3+3?, What is 4+4?]
+May 27, 2026 10:01:29 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mcp_and_agents/should_hide_excluded_tools_from_default_agent' expects prompts: [Do you have access to a tool called secret_tool? Answer yes or no.]
+May 27, 2026 10:01:31 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mcp_and_agents/should_accept_mcp_server_configuration_on_session_create' expects prompts: [What is 2+2?]
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 30.27 s -- in com.github.copilot.McpAndAgentsTest
+[INFO] Running com.github.copilot.MessageAttachmentTest
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.029 s -- in com.github.copilot.MessageAttachmentTest
+[INFO] Running com.github.copilot.MetadataApiTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.999 s -- in com.github.copilot.MetadataApiTest
+[INFO] Running com.github.copilot.ModeHandlersTest
+May 27, 2026 10:01:40 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mode_handlers/should_invoke_exit_plan_mode_handler_when_model_uses_tool' expects prompts: [Create a brief implementation plan for adding a greeting.txt file, then request approval with exit_plan_mode.]
+May 27, 2026 10:01:42 PM com.github.copilot.E2ETestContext configureForTest
+INFO: Configured snapshot 'mode_handlers/should_invoke_auto_mode_switch_handler_when_rate_limited' expects prompts: [Explain that auto mode recovered from a rate limit in one short sentence.]
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.15 s -- in com.github.copilot.ModeHandlersTest
+[INFO] Running com.github.copilot.ModelInfoTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in com.github.copilot.ModelInfoTest
+[INFO] Running com.github.copilot.ModuleDescriptorTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.005 s -- in com.github.copilot.ModuleDescriptorTest
+[INFO] Running com.github.copilot.OptionalApiAndJacksonTest
+[INFO] Tests run: 51, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.067 s -- in com.github.copilot.OptionalApiAndJacksonTest
+[INFO] Running com.github.copilot.PerSessionAuthTest
+[CapiProxy stderr] Error in proxying request: Error: ReplayingCapiProxy not yet initialized. Either pass filePath and workDir to the constructor, or post configuration to /config before making other HTTP requests.
+[CapiProxy stderr]     at <anonymous> (/home/edburns/workareas/copilot-sdk/java/target/copilot-sdk/test/harness/replayingCapiProxy.ts:244:17)
+[CapiProxy stderr]     at iife (/home/edburns/workareas/copilot-sdk/java/target/copilot-sdk/test/harness/util.ts:6:10)
+[CapiProxy stderr]     at ReplayingCapiProxy.performRequest (/home/edburns/workareas/copilot-sdk/java/target/copilot-sdk/test/harness/replayingCapiProxy.ts:172:10)
+[CapiProxy stderr]     at IncomingMessage.<anonymous> (/home/edburns/workareas/copilot-sdk/java/target/copilot-sdk/test/harness/capturingHttpProxy.ts:58:14)
+[CapiProxy stderr]     at IncomingMessage.emit (node:events:508:28)
+[CapiProxy stderr]     at endReadableNT (node:internal/streams/readable:1729:12)
+[CapiProxy stderr]     at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
